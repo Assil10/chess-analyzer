@@ -284,35 +284,50 @@ Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}
         output.append("")
         output.append("Move Quality Breakdown:")
         
-        # Top moves
-        diff = ws.top_moves - bs.top_moves
-        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
-        output.append(f"{'  Top':<20} {ws.top_moves} ({ws.top_moves/ws.total_moves*100:.1f}%){'':<10} {bs.top_moves} ({bs.top_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
-        
-        # Excellent moves
-        diff = ws.excellent_moves - bs.excellent_moves
-        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
-        output.append(f"{'  Excellent':<20} {ws.excellent_moves} ({ws.excellent_moves/ws.total_moves*100:.1f}%){'':<10} {bs.excellent_moves} ({bs.excellent_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
-        
-        # Good moves
-        diff = ws.good_moves - bs.good_moves
-        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
-        output.append(f"{'  Good':<20} {ws.good_moves} ({ws.good_moves/ws.total_moves*100:.1f}%){'':<10} {bs.good_moves} ({bs.good_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
-        
-        # Mistakes
-        diff = ws.mistake_moves - bs.mistake_moves
-        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
-        output.append(f"{'  Mistake':<20} {ws.mistake_moves} ({ws.mistake_moves/ws.total_moves*100:.1f}%){'':<10} {bs.mistake_moves} ({bs.mistake_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
-        
-        # Blunders
-        diff = ws.blunder_moves - bs.blunder_moves
-        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
-        output.append(f"{'  Blunder':<20} {ws.blunder_moves} ({ws.blunder_moves/ws.total_moves*100:.1f}%){'':<10} {bs.blunder_moves} ({bs.blunder_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
-        
         # Brilliant moves
         diff = ws.brilliant_moves - bs.brilliant_moves
         diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
         output.append(f"{'  Brilliant':<20} {ws.brilliant_moves:<20} {bs.brilliant_moves:<20} {diff_str}")
+        
+        # Great moves
+        diff = ws.great_moves - bs.great_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Great Move':<20} {ws.great_moves:<20} {bs.great_moves:<20} {diff_str}")
+        
+        # Best moves
+        diff = ws.best_moves - bs.best_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Best Move':<20} {ws.best_moves:<20} {bs.best_moves:<20} {diff_str}")
+        
+        # Excellent moves
+        diff = ws.excellent_moves - bs.excellent_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Excellent':<20} {ws.excellent_moves:<20} {bs.excellent_moves:<20} {diff_str}")
+        
+        # Good moves
+        diff = ws.good_moves - bs.good_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Good':<20} {ws.good_moves:<20} {bs.good_moves:<20} {diff_str}")
+        
+        # Book moves
+        diff = ws.book_moves - bs.book_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Book':<20} {ws.book_moves:<20} {bs.book_moves:<20} {diff_str}")
+        
+        # Inaccuracies
+        diff = ws.inaccuracy_moves - bs.inaccuracy_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Inaccuracy':<20} {ws.inaccuracy_moves:<20} {bs.inaccuracy_moves:<20} {diff_str}")
+        
+        # Mistakes
+        diff = ws.mistake_moves - bs.mistake_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Mistake':<20} {ws.mistake_moves:<20} {bs.mistake_moves:<20} {diff_str}")
+        
+        # Blunders
+        diff = ws.blunder_moves - bs.blunder_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Blunder':<20} {ws.blunder_moves:<20} {bs.blunder_moves:<20} {diff_str}")
         
         # Summary statistics
         output.append("")

@@ -13,10 +13,14 @@ class TestMoveLabel:
     """Test MoveLabel enum."""
     
     def test_move_label_values(self):
-        """Test that MoveLabel has the expected values."""
-        assert MoveLabel.TOP == "Top"
+        """Test that MoveLabel has the expected Chess.com values."""
+        assert MoveLabel.BRILLIANT == "Brilliant"
+        assert MoveLabel.GREAT_MOVE == "Great Move"
+        assert MoveLabel.BEST_MOVE == "Best Move"
         assert MoveLabel.EXCELLENT == "Excellent"
         assert MoveLabel.GOOD == "Good"
+        assert MoveLabel.BOOK == "Book"
+        assert MoveLabel.INACCURACY == "Inaccuracy"
         assert MoveLabel.MISTAKE == "Mistake"
         assert MoveLabel.BLUNDER == "Blunder"
 
@@ -37,9 +41,13 @@ class TestPlayerStats:
         stats = PlayerStats(
             name="Test Player",
             total_moves=10,
-            top_moves=5,
-            excellent_moves=2,
+            brilliant_moves=1,
+            great_moves=2,
+            best_moves=1,
+            excellent_moves=1,
             good_moves=1,
+            book_moves=1,
+            inaccuracy_moves=1,
             mistake_moves=1,
             blunder_moves=1,
             total_cp_loss=100
@@ -48,20 +56,22 @@ class TestPlayerStats:
         # Trigger post_init calculations
         stats.__post_init__()
         
-        assert stats.accuracy_percentage == 80.0  # (5+2+1)/10 * 100
+        # Accuracy should include: brilliant + great + best + excellent + good + book
+        # 1 + 2 + 1 + 1 + 1 + 1 = 7 out of 10 = 70.0%
+        assert stats.accuracy_percentage == 70.0
         assert stats.blunder_rate == 10.0  # 1/10 * 100
         assert stats.average_cp_loss == 10.0  # 100/10
     
     def test_player_stats_to_dict(self):
         """Test PlayerStats serialization."""
-        stats = PlayerStats(name="Test Player", total_moves=5, top_moves=3)
+        stats = PlayerStats(name="Test Player", total_moves=5, brilliant_moves=2)
         stats.__post_init__()
         
         result = stats.to_dict()
         assert result["name"] == "Test Player"
         assert result["total_moves"] == 5
-        assert result["top_moves"] == 3
-        assert result["accuracy_percentage"] == 60.0
+        assert result["brilliant_moves"] == 2
+        assert result["accuracy_percentage"] == 40.0  # 2/5 * 100
 
 
 class TestMoveAssessment:
@@ -75,10 +85,10 @@ class TestMoveAssessment:
             is_white=True,
             san="e4",
             uci="e2e4",
-            cp_gain=50,
+            cp_gain=0,
             loss_vs_best=0,
             best_move="e4",
-            label=MoveLabel.TOP
+            label=MoveLabel.BEST_MOVE
         )
         
         assert assessment.move == "e4"
@@ -86,10 +96,10 @@ class TestMoveAssessment:
         assert assessment.is_white is True
         assert assessment.san == "e4"
         assert assessment.uci == "e2e4"
-        assert assessment.cp_gain == 50
+        assert assessment.cp_gain == 0
         assert assessment.loss_vs_best == 0
         assert assessment.best_move == "e4"
-        assert assessment.label == MoveLabel.TOP
+        assert assessment.label == MoveLabel.BEST_MOVE
     
     def test_move_assessment_defaults(self):
         """Test MoveAssessment default values."""
@@ -102,7 +112,7 @@ class TestMoveAssessment:
             cp_gain=0,
             loss_vs_best=0,
             best_move="e4",
-            label=MoveLabel.TOP
+            label=MoveLabel.BEST_MOVE
         )
         
         assert assessment.brilliant is False
@@ -124,10 +134,10 @@ class TestMoveAssessment:
             is_white=True,
             san="e4",
             uci="e2e4",
-            cp_gain=50,
+            cp_gain=0,
             loss_vs_best=0,
             best_move="e4",
-            label=MoveLabel.TOP
+            label=MoveLabel.BEST_MOVE
         )
         
         result = assessment.to_dict()
@@ -136,10 +146,10 @@ class TestMoveAssessment:
         assert result["is_white"] is True
         assert result["san"] == "e4"
         assert result["uci"] == "e2e4"
-        assert result["cp_gain"] == 50
+        assert result["cp_gain"] == 0
         assert result["loss_vs_best"] == 0
         assert result["best_move"] == "e4"
-        assert result["label"] == MoveLabel.TOP
+        assert result["label"] == MoveLabel.BEST_MOVE
 
 
 class TestGameAnalysis:
@@ -162,7 +172,7 @@ class TestGameAnalysis:
                 cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
-                label=MoveLabel.TOP
+                label=MoveLabel.BEST_MOVE
             )
         ]
         
@@ -194,7 +204,7 @@ class TestGameAnalysis:
                 cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
-                label=MoveLabel.TOP
+                label=MoveLabel.BEST_MOVE
             )
         ]
         
@@ -209,7 +219,7 @@ class TestGameAnalysis:
         assert game_analysis.black_stats is not None
         assert game_analysis.white_stats.total_moves == 1
         assert game_analysis.black_stats.total_moves == 0  # No black moves in this simple game
-        assert game_analysis.white_stats.top_moves == 1
+        assert game_analysis.white_stats.best_moves == 1  # Should be BEST_MOVE since loss_vs_best = 0
     
     def test_game_analysis_to_dict(self):
         """Test GameAnalysis serialization."""
@@ -228,7 +238,7 @@ class TestGameAnalysis:
                 cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
-                label=MoveLabel.TOP
+                label=MoveLabel.BEST_MOVE
             )
         ]
         
@@ -267,7 +277,7 @@ class TestAnalysisResult:
                 cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
-                label=MoveLabel.TOP
+                label=MoveLabel.BEST_MOVE
             )
         ]
         
@@ -299,7 +309,7 @@ class TestAnalysisResult:
                 cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
-                label=MoveLabel.TOP
+                label=MoveLabel.BEST_MOVE
             )
         ]
         

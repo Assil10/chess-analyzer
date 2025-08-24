@@ -10,10 +10,14 @@ import chess.pgn
 
 
 class MoveLabel(str, Enum):
-    """Move quality labels based on centipawn loss."""
-    TOP = "Top"
+    """Move quality labels based on Chess.com classification system."""
+    BRILLIANT = "Brilliant"
+    GREAT_MOVE = "Great Move"
+    BEST_MOVE = "Best Move"
     EXCELLENT = "Excellent"
     GOOD = "Good"
+    BOOK = "Book"
+    INACCURACY = "Inaccuracy"
     MISTAKE = "Mistake"
     BLUNDER = "Blunder"
 
@@ -23,12 +27,15 @@ class PlayerStats:
     """Statistics for a single player (White or Black)."""
     name: str
     total_moves: int = 0
-    top_moves: int = 0
+    brilliant_moves: int = 0
+    great_moves: int = 0
+    best_moves: int = 0
     excellent_moves: int = 0
     good_moves: int = 0
+    book_moves: int = 0
+    inaccuracy_moves: int = 0
     mistake_moves: int = 0
     blunder_moves: int = 0
-    brilliant_moves: int = 0
     accuracy_percentage: float = 0.0
     blunder_rate: float = 0.0
     average_cp_loss: float = 0.0
@@ -37,8 +44,11 @@ class PlayerStats:
     def __post_init__(self):
         """Calculate derived statistics."""
         if self.total_moves > 0:
+            # Calculate accuracy based on Chess.com system
+            # Brilliant, Great Move, Best Move, Excellent, Good, and Book moves count as accurate
             self.accuracy_percentage = round(
-                (self.top_moves + self.excellent_moves + self.good_moves) / self.total_moves * 100, 1
+                (self.brilliant_moves + self.great_moves + self.best_moves + 
+                 self.excellent_moves + self.good_moves + self.book_moves) / self.total_moves * 100, 1
             )
             self.blunder_rate = round(self.blunder_moves / self.total_moves * 100, 1)
             self.average_cp_loss = round(self.total_cp_loss / self.total_moves, 1)
@@ -48,12 +58,15 @@ class PlayerStats:
         return {
             "name": self.name,
             "total_moves": self.total_moves,
-            "top_moves": self.top_moves,
+            "brilliant_moves": self.brilliant_moves,
+            "great_moves": self.great_moves,
+            "best_moves": self.best_moves,
             "excellent_moves": self.excellent_moves,
             "good_moves": self.good_moves,
+            "book_moves": self.book_moves,
+            "inaccuracy_moves": self.inaccuracy_moves,
             "mistake_moves": self.mistake_moves,
             "blunder_moves": self.blunder_moves,
-            "brilliant_moves": self.brilliant_moves,
             "accuracy_percentage": self.accuracy_percentage,
             "blunder_rate": self.blunder_rate,
             "average_cp_loss": self.average_cp_loss,
@@ -147,12 +160,20 @@ class GameAnalysis:
         for move in moves:
             stats.total_cp_loss += abs(move.loss_vs_best)
             
-            if move.label == MoveLabel.TOP:
-                stats.top_moves += 1
+            if move.label == MoveLabel.BRILLIANT:
+                stats.brilliant_moves += 1
+            elif move.label == MoveLabel.GREAT_MOVE:
+                stats.great_moves += 1
+            elif move.label == MoveLabel.BEST_MOVE:
+                stats.best_moves += 1
             elif move.label == MoveLabel.EXCELLENT:
                 stats.excellent_moves += 1
             elif move.label == MoveLabel.GOOD:
                 stats.good_moves += 1
+            elif move.label == MoveLabel.BOOK:
+                stats.book_moves += 1
+            elif move.label == MoveLabel.INACCURACY:
+                stats.inaccuracy_moves += 1
             elif move.label == MoveLabel.MISTAKE:
                 stats.mistake_moves += 1
             elif move.label == MoveLabel.BLUNDER:
