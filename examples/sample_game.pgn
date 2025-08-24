@@ -1,0 +1,10 @@
+[Event "Sample Game"]
+[Site "Chess Analysis AI Test"]
+[Date "2024.01.01"]
+[Round "1"]
+[White "Player 1"]
+[Black "Player 2"]
+[Result "1-0"]
+[ECO "C20"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 O-O 6. Nc3 d6 7. Be3 Bb6 8. Qd2 Qe7 9. Rad1 Rad8 10. h3 h6 11. Kh2 Kh7 12. Rg1 Rg8 13. g4 g5 14. Nh4 Qf8 15. Nf5 Bxf5 16. exf5 Qd8 17. Qe2 Qe7 18. Qxe7 Nxe7 19. Bxb6 axb6 20. Rde1 Rdf8 21. f6 Nc6 22. Bxf7 Rxf7 23. Rxe5 dxe5 24. f7+ Kh8 25. f8=Q+ Rxf8 26. Rxf8#
