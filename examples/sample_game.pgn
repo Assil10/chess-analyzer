@@ -2,22 +2,21 @@
 [Site "Chess.com"]
 [Date "2025.08.24"]
 [Round "?"]
-[White "jasoneyere"]
-[Black "Rieema"]
-[Result "1-0"]
+[White "Senpai_gj"]
+[Black "rabeeeb"]
+[Result "1/2-1/2"]
 [TimeControl "600"]
-[WhiteElo "188"]
-[BlackElo "171"]
-[Termination "jasoneyere won on time"]
-[ECO "D02"]
-[EndTime "13:57:04 GMT+0000"]
-[Link "https://www.chess.com/game/live/142275922476?username=rieema&move=0"]
+[WhiteElo "1617"]
+[BlackElo "1103"]
+[Termination "Game drawn by repetition"]
+[ECO "C40"]
+[EndTime "13:40:37 GMT+0000"]
+[Link "https://www.chess.com/game/live/142275695412"]
 
-1. Nf3 d5 2. d4 f5 3. e3 Na6 4. Bd3 Nh6 5. Bb5+ c6 6. Bd3 f4 7. exf4 g6 8. Qe2
-Rg8 9. Bd2 Nb4 10. Bxb4 a5 11. Bc3 e6 12. Qd2 b6 13. Ng5 Rh8 14. Qe2 Be7 15.
-Nxe6 Bxe6 16. Qxe6 a4 17. Qxc6+ Kf8 18. Qxg6 Nf7 19. Na3 b5 20. Qg4 Rg8 21. Qh4
-Bxh4 22. Bxh7 Rh8 23. Bg6 Nh6 24. Bb4+ Kg8 25. Ke2 Kg7 26. Bh5 Nf5 27. Bc3 Rxh5
-28. Kd3 b4 29. Bxb4 Rb8 30. Bc3 Rg5 31. Rhe1 Rxg2 32. Re2 Rxh2 33. b4 Nd6 34.
-Re6 Nf7 35. Rae1 Qd7 36. Nb1 Rxf2 37. f5 Rf3+ 38. Kd2 Bxe1+ 39. Kxe1 Qxe6+ 40.
-Kd1 a3 41. Kc1 Qxf5 42. Nxa3 Ra8 43. Nb5 Rb8 44. Nd6 Nxd6 45. Bd2 Qg5 46. Bxg5
-Rf1+ 47. Kb2 Rxb4+ 48. Kc3 Ra4 49. a3 1-0
+1. e4 e5 2. Nf3 d5 3. exd5 Qxd5 4. Nc3 Qd6 5. d4 exd4 6. Qxd4 Qxd4 7. Nxd4 Bb4
+8. Bd2 Bxc3 9. Bxc3 Nf6 10. Nb5 Na6 11. Nd4 O-O 12. Bxa6 bxa6 13. O-O-O Ne4 14.
+Be1 Rd8 15. Nc6 Rxd1+ 16. Kxd1 Bb7 17. Nd4 Rd8 18. c3 Ng5 19. Kc1 Ne6 20. Nxe6
+fxe6 21. f3 c5 22. Bh4 Rd6 23. Rd1 Rxd1+ 24. Kxd1 Kf7 25. Bg3 g5 26. Bb8 Bd5 27.
+b3 c4 28. b4 e5 29. Bxa7 e4 30. Ke2 exf3+ 31. gxf3 Kf6 32. a4 Kf5 33. Ke3 g4 34.
+fxg4+ Kxg4 35. b5 axb5 36. axb5 h5 37. Kf2 Kh3 38. Kg1 Kg4 39. Kf2 Kh3 40. Kg1
+Kg4 41. Kf2 1/2-1/2
