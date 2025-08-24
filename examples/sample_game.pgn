@@ -1,36 +1,23 @@
 [Event "Live Chess"]
 [Site "Chess.com"]
-[Date "2025.08.21"]
-[Round "-"]
-[White "rabeeeb"]
-[Black "Senpai_gj"]
-[Result "0-1"]
-[CurrentPosition "8/p6R/4k1p1/6P1/P5R1/1Pr5/6PK/4q2r w - - 1 45"]
-[Timezone "UTC"]
-[ECO "B12"]
-[ECOUrl "https://www.chess.com/openings/Caro-Kann-Defense-Advance-Botvinnik-Carls-Defense-4.Nf3-cxd4"]
-[UTCDate "2025.08.21"]
-[UTCTime "22:34:58"]
-[WhiteElo "1103"]
-[BlackElo "1542"]
+[Date "2025.08.24"]
+[Round "?"]
+[White "jasoneyere"]
+[Black "Rieema"]
+[Result "1-0"]
 [TimeControl "600"]
-[Termination "Senpai_gj won by checkmate"]
-[StartTime "22:34:58"]
-[EndDate "2025.08.21"]
-[EndTime "22:54:30"]
-[Link "https://www.chess.com/analysis/game/live/142173640156/analysis"]
-[WhiteUrl "https://images.chesscomfiles.com/uploads/v1/user/151306519.2335a837.50x50o.627a6cf591c1.jpg"]
-[WhiteCountry "219"]
-[WhiteTitle ""]
-[BlackUrl "https://images.chesscomfiles.com/uploads/v1/user/354455083.47f4e442.50x50o.a3a4e5718769.jpg"]
-[BlackCountry "219"]
-[BlackTitle ""]
+[WhiteElo "188"]
+[BlackElo "171"]
+[Termination "jasoneyere won on time"]
+[ECO "D02"]
+[EndTime "13:57:04 GMT+0000"]
+[Link "https://www.chess.com/game/live/142275922476?username=rieema"]
 
-1. e4 c6 2. d4 d5 3. e5 c5 4. Nf3 cxd4 5. Qxd4 Nc6 6. Qd1 $6 Bg4 7. Be2 $6 e6 8.
-O-O $2 Bxf3 $1 9. Bxf3 Nxe5 10. Bf4 Bd6 $6 11. Nc3 $2 Nxf3+ 12. Qxf3 Bxf4 13. Qxf4 Qb6 $2
-14. b3 $9 Nf6 15. Ne2 Ne4 $2 16. Ng3 $6 Nc3 $4 17. Kh1 $9 Qa6 $9 18. a4 $9 Rc8 19. Nh5
-O-O $2 20. Qg5 $1 g6 21. Nf6+ $1 Kg7 22. Ng4 $2 f5 $1 23. Qh6+ Kg8 $1 24. Ne5 Qd6 $1 25. f4
-Ne4 26. h4 $2 Rxc2 27. h5 Ng3+ 28. Kh2 Nxh5 29. Rf3 Qe7 30. Rh3 Nf6 31. Qg5 Ng4+
-32. Nxg4 Qxg5 33. fxg5 fxg4 $1 34. Rg3 Rff2 35. Rg1 e5 36. Rxg4 e4 37. Kh3 e3 38.
-Rd1 e2 39. Rxd5 $6 e1=Q 40. Rd8+ Kf7 41. Rd7+ Ke6 42. Rxb7 Rc3+ 43. Kh2 Rf1 44.
-Rxh7 $6 Rh1# 0-1
+1. Nf3 d5 2. d4 f5 3. e3 Na6 4. Bd3 Nh6 5. Bb5+ c6 6. Bd3 f4 7. exf4 g6 8. Qe2
+Rg8 9. Bd2 Nb4 10. Bxb4 a5 11. Bc3 e6 12. Qd2 b6 13. Ng5 Rh8 14. Qe2 Be7 15.
+Nxe6 Bxe6 16. Qxe6 a4 17. Qxc6+ Kf8 18. Qxg6 Nf7 19. Na3 b5 20. Qg4 Rg8 21. Qh4
+Bxh4 22. Bxh7 Rh8 23. Bg6 Nh6 24. Bb4+ Kg8 25. Ke2 Kg7 26. Bh5 Nf5 27. Bc3 Rxh5
+28. Kd3 b4 29. Bxb4 Rb8 30. Bc3 Rg5 31. Rhe1 Rxg2 32. Re2 Rxh2 33. b4 Nd6 34.
+Re6 Nf7 35. Rae1 Qd7 36. Nb1 Rxf2 37. f5 Rf3+ 38. Kd2 Bxe1+ 39. Kxe1 Qxe6+ 40.
+Kd1 a3 41. Kc1 Qxf5 42. Nxa3 Ra8 43. Nb5 Rb8 44. Nd6 Nxd6 45. Bd2 Qg5 46. Bxg5
+Rf1+ 47. Kb2 Rxb4+ 48. Kc3 Ra4 49. a3 1-0

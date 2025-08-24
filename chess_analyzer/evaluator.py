@@ -18,18 +18,17 @@ class MoveEvaluator:
     def __init__(self, chess_engine: ChessEngine):
         self.engine = chess_engine
 
-        # Tunable thresholds (centipawns) – aligned to Chess.com
-        self.CP_LOSS_CLAMP = 1000              # cap extreme swings (e.g., near mates)
+        # Tunable thresholds (centipawns) – stricter like Chess.com
+        self.CP_LOSS_CLAMP = 1000              # cap extreme swings (mates etc.)
 
-        ### CHANGED: rebalanced thresholds
-        self.GREAT_MAX = 10                    # Great: near-best, but not top move
-        self.EXCELLENT_MAX = 20                # Excellent: small imprecision
-        self.GOOD_MAX = 50                     # Good: reasonable play
-        self.INACC_MAX = 100                   # Inaccuracy: noticeable drop
-        self.MISTAKE_MAX = 300                 # Mistake: big error (≤ 3 pawns)
-        self.MISS_MIN = 301                    # Miss: missed winning chance (301–600)
-        self.MISS_MAX = 600
-        self.BLUNDER_MIN = 601                 # Blunder: collapse (>6 pawns)
+        self.GREAT_MAX = 5                     # Great: ≤ 5 cp (very rare, almost perfect)
+        self.EXCELLENT_MAX = 15                # Excellent: ≤ 15 cp
+        self.GOOD_MAX = 40                     # Good: ≤ 40 cp
+        self.INACC_MAX = 100                   # Inaccuracy: ≤ 100 cp
+        self.MISTAKE_MAX = 200                 # Mistake: ≤ 200 cp
+        self.MISS_MIN = 201                    # Missed chance (201–400)
+        self.MISS_MAX = 400
+        self.BLUNDER_MIN = 401                 # Blunder: > 400 cp
 
         # Game-context constraints
         self.BRILLIANT_CAP = 2                 # max brilliant per game
@@ -148,7 +147,7 @@ class MoveEvaluator:
         is_miss: bool = False,
         eval_before: int = 0
     ) -> MoveLabel:
-        """Map to Chess.com-like labels with context-aware blunders."""
+        """Map to Chess.com-like labels with stricter thresholds and context-aware blunders."""
         if is_book:
             return MoveLabel.BOOK
         if is_brilliant:
@@ -170,13 +169,11 @@ class MoveEvaluator:
         if self.MISS_MIN <= loss_vs_best <= self.MISS_MAX:
             return MoveLabel.MISS
 
-        # Blunder context (don’t spam blunders in lost/won positions)
+        # Blunder context: avoid flooding already lost/won positions with blunders
         eval_pawns = eval_before / 100.0
-        if eval_pawns <= -3.0 or eval_pawns >= 3.0:
-            # already clearly lost/won → be lenient
+        if abs(eval_pawns) >= 3.0:  # already ±3 pawns (decided)
             return MoveLabel.MISTAKE if loss_vs_best < self.BLUNDER_MIN else MoveLabel.BLUNDER
 
-        # Game is still competitive
         return MoveLabel.BLUNDER
 
     # ---------- Heuristics ----------
