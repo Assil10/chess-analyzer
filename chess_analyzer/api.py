@@ -210,14 +210,22 @@ async def analyze_game_file(
 
 @app.post("/analyze-batch")
 async def analyze_batch_games(
-    request: AnalysisRequest,
+    pgn: str = Form(..., description="PGN string containing games to analyze"),
+    engine_path: str = Form(..., description="Path to Stockfish executable"),
+    shallow_depth: int = Form(default=10, description="Shallow analysis depth"),
+    deep_depth: int = Form(default=20, description="Deep analysis depth"),
+    multipv: int = Form(default=3, description="Number of top moves to analyze"),
     max_games: int = Form(default=10, description="Maximum number of games to analyze")
 ):
     """
     Analyze multiple games from PGN string (supports multiple games).
     
     Args:
-        request: AnalysisRequest containing PGN and parameters
+        pgn: PGN string containing games to analyze
+        engine_path: Path to Stockfish executable
+        shallow_depth: Shallow analysis depth
+        deep_depth: Deep analysis depth
+        multipv: Number of top moves to analyze
         max_games: Maximum number of games to analyze
         
     Returns:
@@ -225,7 +233,7 @@ async def analyze_batch_games(
     """
     try:
         # Parse PGN (may contain multiple games)
-        pgn_io = io.StringIO(request.pgn)
+        pgn_io = io.StringIO(pgn)
         games = []
         
         while True:
@@ -241,7 +249,7 @@ async def analyze_batch_games(
             raise HTTPException(status_code=400, detail="No valid games found in PGN")
         
         # Initialize engine and evaluator
-        engine = ChessEngine(request.engine_path)
+        engine = ChessEngine(engine_path)
         evaluator = MoveEvaluator(engine)
         annotator = PGNAnnotator()
         
@@ -254,9 +262,9 @@ async def analyze_batch_games(
                 # Evaluate the game
                 move_assessments = evaluator.evaluate_game(
                     game, 
-                    request.shallow_depth, 
-                    request.deep_depth, 
-                    request.multipv
+                    shallow_depth, 
+                    deep_depth, 
+                    multipv
                 )
                 
                 # Create game analysis

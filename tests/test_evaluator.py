@@ -15,7 +15,7 @@ class MockChessEngine:
     """Mock chess engine for testing."""
     
     def __init__(self):
-        self.engine = Mock()
+        pass
     
     def get_evaluation(self, board, depth):
         """Mock evaluation method."""
@@ -99,10 +99,10 @@ class TestMoveEvaluator:
     
     def test_detect_only_move(self):
         """Test only move detection."""
-        # Create a position with only one legal move
-        board = chess.Board("8/8/8/8/8/8/8/K7 w - - 0 1")
+        # Create a position with only one legal move (king in check with only one escape)
+        board = chess.Board("8/8/8/8/8/8/7k/7K w - - 0 1")
         
-        # This position has only one legal move (Ka1-b1 or similar)
+        # This position has only one legal move (Kh1-g1) to avoid stalemate
         result = self.evaluator._detect_only_move(board, -300)
         assert result is True
         
@@ -127,13 +127,13 @@ class TestMoveEvaluator:
     
     def test_detect_surprise(self):
         """Test surprise move detection."""
-        # Mock top moves
+        # Mock top moves - format: (san, eval, uci)
         shallow_moves = [("e4", 100, "e2e4"), ("d4", 95, "d2d4"), ("Nf3", 90, "g1f3")]
-        deep_moves = [("d4", 110, "d2d4"), ("e4", 105, "e2e4"), ("Nf3", 100, "g1f3")]
+        deep_moves = [("c4", 110, "c2c4"), ("e4", 105, "e2e4"), ("d4", 100, "d2d4")]
         
-        # Test surprise (d4 not in shallow top 3 but best at deep)
-        result = self.evaluator._detect_surprise(shallow_moves, deep_moves, "d4")
-        assert result is True
+        # Test surprise (c4 not in shallow top 3 but best at deep)
+        result = self.evaluator._detect_surprise(shallow_moves, deep_moves, "c4")
+        assert result is True  # c4 is not in shallow top 3 but is best at deep
         
         # Test no surprise (e4 is in both)
         result = self.evaluator._detect_surprise(shallow_moves, deep_moves, "e4")
@@ -240,10 +240,10 @@ class TestMoveEvaluator:
     
     def test_evaluate_game(self):
         """Test complete game evaluation."""
-        # Create a simple game
+        # Create a simple game with two moves
         game = chess.pgn.Game()
-        game.add_variation(chess.Move.from_uci("e2e4"))
-        game.add_variation(chess.Move.from_uci("e7e5"))
+        node = game.add_variation(chess.Move.from_uci("e2e4"))
+        node.add_variation(chess.Move.from_uci("e7e5"))
         
         assessments = self.evaluator.evaluate_game(
             game=game,

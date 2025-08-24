@@ -34,11 +34,11 @@ class ChessEngine:
             logger.error(f"Failed to connect to chess engine: {e}")
             raise RuntimeError(f"Cannot connect to chess engine at {self.engine_path}")
     
-    def _ensure_connected(self) -> None:
-        """Ensure engine is connected, reconnect if necessary."""
-        if self.engine is None or self.engine.is_terminated():
-            logger.warning("Engine disconnected, attempting to reconnect...")
+    def _ensure_connected(self):
+        """Ensure engine is connected and ready."""
+        if self.engine is None:
             self._connect()
+        # Remove the is_terminated check as it's not available in newer versions
     
     def analyze_position(
         self, 
@@ -61,8 +61,8 @@ class ChessEngine:
         """
         self._ensure_connected()
         
-        if multipv > 1:
-            self.engine.configure({"MultiPV": multipv})
+        # MultiPV is automatically managed in newer python-chess versions
+        # No need to configure it manually
         
         try:
             if time_limit:
@@ -104,13 +104,20 @@ class ChessEngine:
         if "score" in result:
             score = result["score"]
             if score.is_mate():
-                # Convert mate to large centipawn value
-                if score.mate() > 0:
-                    return 10000  # White mates
-                else:
-                    return -10000  # Black mates
+                # For PovScore, get the mate value from white's perspective
+                if hasattr(score, 'white'):
+                    white_score = score.white()
+                    if white_score.is_mate():
+                        mate_value = white_score.mate()
+                        return 10000 if mate_value > 0 else -10000
+                # Fallback for other score types
+                return 10000 if score.mate() > 0 else -10000
             else:
-                return score.score()
+                # Handle PovScore objects from newer python-chess versions
+                if hasattr(score, 'white'):
+                    return score.white().score(mate_score=10000)
+                else:
+                    return score.score()
         else:
             return 0
     
@@ -145,9 +152,23 @@ class ChessEngine:
                     # Get evaluation
                     score = result["score"]
                     if score.is_mate():
-                        eval_cp = 10000 if score.mate() > 0 else -10000
+                        # For PovScore, get the mate value from white's perspective
+                        if hasattr(score, 'white'):
+                            white_score = score.white()
+                            if white_score.is_mate():
+                                mate_value = white_score.mate()
+                                eval_cp = 10000 if mate_value > 0 else -10000
+                            else:
+                                eval_cp = white_score.score(mate_score=10000)
+                        else:
+                            # Fallback for other score types
+                            eval_cp = 10000 if score.mate() > 0 else -10000
                     else:
-                        eval_cp = score.score()
+                        # Handle PovScore objects from newer python-chess versions
+                        if hasattr(score, 'white'):
+                            eval_cp = score.white().score(mate_score=10000)
+                        else:
+                            eval_cp = score.score()
                     
                     top_moves.append((san, eval_cp, uci))
         
@@ -187,11 +208,15 @@ class ChessEngine:
         
         return evaluations
     
-    def close(self) -> None:
+    def close(self):
         """Close the engine connection."""
-        if self.engine and not self.engine.is_terminated():
-            self.engine.quit()
-            logger.info("Chess engine connection closed")
+        if self.engine:
+            try:
+                self.engine.quit()
+            except Exception as e:
+                logger.warning(f"Error closing engine: {e}")
+            finally:
+                self.engine = None
     
     def __enter__(self):
         """Context manager entry."""

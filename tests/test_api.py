@@ -259,19 +259,17 @@ class TestAPIEndpoints:
         mock_annotator_instance.create_batch_summary.return_value = "Batch Summary"
         mock_annotator.return_value = mock_annotator_instance
         
-        # Test request
-        request_data = {
-            "pgn": "1. e4\n\n1. d4",
-            "engine_path": "/path/to/stockfish",
-            "shallow_depth": 10,
-            "deep_depth": 20,
-            "multipv": 3
-        }
-        
+        # Test request - send as form data since the endpoint expects both JSON and form
         response = self.client.post(
             "/analyze-batch",
-            json=request_data,
-            data={"max_games": "5"}
+            data={
+                "pgn": "1. e4\n\n1. d4",
+                "engine_path": "/path/to/stockfish",
+                "shallow_depth": "10",
+                "deep_depth": "20",
+                "multipv": "3",
+                "max_games": "5"
+            }
         )
         
         assert response.status_code == 200

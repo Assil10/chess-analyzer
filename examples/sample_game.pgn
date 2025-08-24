@@ -1,10 +1,23 @@
-[Event "Sample Game"]
-[Site "Chess Analysis AI Test"]
-[Date "2024.01.01"]
-[Round "1"]
-[White "Player 1"]
-[Black "Player 2"]
+[Event "Live Chess"]
+[Site "Chess.com"]
+[Date "2025.08.24"]
+[Round "?"]
+[White "jasoneyere"]
+[Black "Rieema"]
 [Result "1-0"]
-[ECO "C20"]
+[TimeControl "600"]
+[WhiteElo "188"]
+[BlackElo "171"]
+[Termination "jasoneyere won on time"]
+[ECO "D02"]
+[EndTime "13:57:04 GMT+0000"]
+[Link "https://www.chess.com/game/live/142275922476?username=rieema&move=0"]
 
-1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 O-O 6. Nc3 d6 7. Be3 Bb6 8. Qd2 Qe7 9. Rad1 Rad8 10. h3 h6 11. Kh2 Kh7 12. Rg1 Rg8 13. g4 g5 14. Nh4 Qf8 15. Nf5 Bxf5 16. exf5 Qd8 17. Qe2 Qe7 18. Qxe7 Nxe7 19. Bxb6 axb6 20. Rde1 Rdf8 21. f6 Nc6 22. Bxf7 Rxf7 23. Rxe5 dxe5 24. f7+ Kh8 25. f8=Q+ Rxf8 26. Rxf8#
+1. Nf3 d5 2. d4 f5 3. e3 Na6 4. Bd3 Nh6 5. Bb5+ c6 6. Bd3 f4 7. exf4 g6 8. Qe2
+Rg8 9. Bd2 Nb4 10. Bxb4 a5 11. Bc3 e6 12. Qd2 b6 13. Ng5 Rh8 14. Qe2 Be7 15.
+Nxe6 Bxe6 16. Qxe6 a4 17. Qxc6+ Kf8 18. Qxg6 Nf7 19. Na3 b5 20. Qg4 Rg8 21. Qh4
+Bxh4 22. Bxh7 Rh8 23. Bg6 Nh6 24. Bb4+ Kg8 25. Ke2 Kg7 26. Bh5 Nf5 27. Bc3 Rxh5
+28. Kd3 b4 29. Bxb4 Rb8 30. Bc3 Rg5 31. Rhe1 Rxg2 32. Re2 Rxh2 33. b4 Nd6 34.
+Re6 Nf7 35. Rae1 Qd7 36. Nb1 Rxf2 37. f5 Rf3+ 38. Kd2 Bxe1+ 39. Kxe1 Qxe6+ 40.
+Kd1 a3 41. Kc1 Qxf5 42. Nxa3 Ra8 43. Nb5 Rb8 44. Nd6 Nxd6 45. Bd2 Qg5 46. Bxg5
+Rf1+ 47. Kb2 Rxb4+ 48. Kc3 Ra4 49. a3 1-0
