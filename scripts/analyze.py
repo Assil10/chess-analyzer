@@ -8,6 +8,7 @@ import chess.pgn
 import json
 import sys
 import os
+import io
 from pathlib import Path
 from typing import Optional
 
@@ -94,7 +95,6 @@ def analyze(
         
         chess_engine = ChessEngine(engine)
         evaluator = MoveEvaluator(chess_engine)
-        annotator = PGNAnnotator()
         
     except Exception as e:
         click.echo(f"Error initializing chess engine: {e}", err=True)
@@ -120,76 +120,86 @@ def analyze(
             game_analysis = GameAnalysis(
                 pgn=str(game),
                 game=game,
-                moves=move_assessments,
-                total_moves=len(move_assessments)
+                moves=move_assessments
             )
             
             game_analyses.append(game_analysis)
             
-            if not quiet:
-                click.echo(f"  Completed: {len(move_assessments)} moves analyzed")
-        
-        # Create batch result
-        batch_result = AnalysisResult(
-            games=game_analyses,
-            total_games=len(game_analyses),
-            total_moves=0  # Will be calculated in __post_init__
-        )
-        
-        # Show summary
-        if not quiet:
-            click.echo("\n" + "="*60)
-            click.echo("ANALYSIS COMPLETE")
-            click.echo("="*60)
-        
-        summary = annotator.create_batch_summary(game_analyses)
-        click.echo(summary)
-        
-        # Show detailed analysis if requested
-        if not summary_only and not quiet:
-            for i, game_analysis in enumerate(game_analyses, 1):
-                click.echo(f"\nDetailed Analysis - Game {i}:")
-                click.echo("-" * 40)
-                detailed_summary = annotator.create_summary_table(game_analysis)
-                click.echo(detailed_summary)
-        
-        # Save annotated PGN if output specified
-        if output:
-            try:
-                annotated_pgns = annotator.batch_annotate_games(game_analyses)
-                
-                with open(output, 'w', encoding='utf-8') as f:
-                    for annotated_pgn in annotated_pgns:
-                        f.write(annotated_pgn + "\n\n")
-                
-                click.echo(f"\nAnnotated PGN saved to: {output}")
-                
-            except Exception as e:
-                click.echo(f"Warning: Failed to save annotated PGN: {e}", err=True)
-        
-        # Save JSON results if requested
-        if json_output:
-            try:
-                with open(json_output, 'w', encoding='utf-8') as f:
-                    json.dump(batch_result.to_dict(), f, indent=2, ensure_ascii=False)
-                
-                click.echo(f"JSON results saved to: {json_output}")
-                
-            except Exception as e:
-                click.echo(f"Warning: Failed to save JSON results: {e}", err=True)
-        
-        # Show final statistics
-        if not quiet:
-            click.echo(f"\nTotal games analyzed: {len(game_analyses)}")
-            click.echo(f"Total moves analyzed: {batch_result.total_moves}")
-            click.echo(f"Total brilliant moves found: {batch_result.overall_brilliant_count}")
+            # Create annotator and generate enhanced output
+            annotator = PGNAnnotator()
             
-            # Show move quality distribution
-            click.echo("\nOverall Move Quality Distribution:")
-            for label, count in batch_result.overall_move_distribution.items():
-                percentage = (count / batch_result.total_moves) * 100 if batch_result.total_moves > 0 else 0
-                click.echo(f"  {label.value}: {count} ({percentage:.1f}%)")
-    
+            # Display enhanced analysis
+            print("\n" + "=" * 80)
+            print("CHESS ANALYSIS AI - ENHANCED PLAYER ACCURACY REPORT")
+            print("=" * 80)
+            
+            # Game summary panel
+            if game_analysis.white_stats and game_analysis.black_stats:
+                print("\n" + annotator.create_simple_game_summary(game_analysis))
+            
+            # Player accuracy table
+            if game_analysis.white_stats and game_analysis.black_stats:
+                print("\n" + annotator.create_simple_player_accuracy_table(game_analysis))
+            
+            # Move-by-move analysis
+            print("\n" + "=" * 80)
+            print("MOVE-BY-MOVE ANALYSIS")
+            print("=" * 80)
+            print("")
+            
+            # Header
+            print(f"{'Move':<6} {'Player':<6} {'Move':<8} {'Quality':<12} {'CP Loss':<10} {'Details'}")
+            print("-" * 80)
+            
+            # Moves
+            for move in game_analysis.moves:
+                player = "W" if move.is_white else "B"
+                quality = move.label
+                cp_loss = f"-{move.loss_vs_best}" if move.loss_vs_best > 0 else "0"
+                
+                details = []
+                if move.brilliant:
+                    details.append("!! Brilliant")
+                if move.is_only_move:
+                    details.append("[Only move]")
+                if move.is_sacrifice:
+                    details.append("[Sacrifice]")
+                if move.is_surprise:
+                    details.append("[Surprise]")
+                
+                details_str = " ".join(details)
+                
+                print(f"{move.move_number:<6} {player:<6} {move.san:<8} {quality:<12} {cp_loss:<10} {details_str}")
+            
+            print("\n" + "=" * 80)
+            print("ANALYSIS COMPLETE")
+            print("=" * 80)
+            
+            # Save annotated PGN if requested
+            if output:
+                annotated_pgn = annotator.annotate_game(game_analysis)
+                with open(output, 'w', encoding='utf-8') as f:
+                    f.write(annotated_pgn)
+                click.echo(f"\n✅ Annotated PGN saved to: {output}")
+            
+            # Save JSON results if requested
+            if json_output:
+                with open(json_output, 'w', encoding='utf-8') as f:
+                    json.dump(game_analysis.to_dict(), f, indent=2, ensure_ascii=False)
+                click.echo(f"✅ JSON results saved to: {json_output}")
+            
+            # Display final summary
+            if game_analysis.white_stats and game_analysis.black_stats:
+                ws = game_analysis.white_stats
+                bs = game_analysis.black_stats
+                winner = ws.name if ws.accuracy_percentage > bs.accuracy_percentage else bs.name
+                accuracy_diff = abs(ws.accuracy_percentage - bs.accuracy_percentage)
+                
+                print(f"\n🏆 GAME RESULT: {winner} wins with +{accuracy_diff:.1f}% accuracy advantage")
+                print(f"📊 Overall Game Quality: {game_analysis.overall_quality} ({game_analysis.game_accuracy:.1f}% average accuracy)")
+                print(f"♟️  Total Moves Analyzed: {game_analysis.total_moves}")
+                print(f"✨ Total Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}")
+        
     finally:
         # Clean up
         chess_engine.close()
@@ -295,6 +305,4 @@ cli.add_command(quick_analyze)
 
 
 if __name__ == '__main__':
-    # Add missing import
-    import io
     cli()

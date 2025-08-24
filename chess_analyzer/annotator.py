@@ -1,285 +1,378 @@
 """
-PGN annotation with analysis results and comments.
+PGN annotation and output formatting for chess analysis results.
 """
 
-import chess
 import chess.pgn
-from typing import List, Dict, Any, Optional
-from .models import MoveAssessment, GameAnalysis
-import logging
+from typing import List, Dict, Any
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+from rich.columns import Columns
 
-logger = logging.getLogger(__name__)
+from .models import GameAnalysis, AnalysisResult, MoveLabel, PlayerStats
 
 
 class PGNAnnotator:
-    """Annotates PGN files with analysis results and comments."""
+    """Annotates PGN files with analysis results and generates formatted output."""
     
     def __init__(self):
-        """Initialize the PGN annotator."""
-        # NAG (Numeric Annotation Glyph) mappings
-        self.nag_mapping = {
-            "Top": "!",           # Good move
-            "Excellent": "!!",    # Excellent move
-            "Good": "!?",         # Interesting move
-            "Mistake": "?",       # Mistake
-            "Blunder": "??"       # Blunder
-        }
-        
-        # Comment templates
-        self.comment_templates = {
-            "brilliant": "!! Brilliant",
-            "only_move": "[Only move]",
-            "sacrifice": "[Sacrifice]",
-            "surprise": "[Surprise]",
-            "cp_gain": "Δcp={:+d}",
-            "best_move": "Best: {}",
-            "loss_vs_best": "Loss: {}cp"
-        }
+        self.console = Console()
     
     def annotate_game(self, game_analysis: GameAnalysis) -> str:
-        """
-        Annotate a chess game with analysis results.
+        """Annotate a single game with analysis results."""
+        if not game_analysis.moves:
+            return str(game_analysis.game)
         
-        Args:
-            game_analysis: GameAnalysis object with move assessments
-            
-        Returns:
-            Annotated PGN string
-        """
-        # Create a copy of the game for annotation
-        game = game_analysis.game.copy()
+        # Create annotated PGN
+        game = game_analysis.game
+        board = game.board()
         
-        # Annotate each move
-        self._annotate_moves(game, game_analysis.moves)
+        # Add analysis comments to moves
+        for move_assessment in game_analysis.moves:
+            if move_assessment.move_number <= len(list(game.mainline_moves())):
+                # Find the move in the game tree
+                node = game
+                for _ in range(move_assessment.move_number - 1):
+                    if node.variations:
+                        node = node.variations[0]
+                    else:
+                        break
+                
+                if node.variations:
+                    # Add comment to the move
+                    comment_parts = []
+                    
+                    # Quality label
+                    comment_parts.append(f"[{move_assessment.label}]")
+                    
+                    # Centipawn loss
+                    if move_assessment.loss_vs_best > 0:
+                        comment_parts.append(f"Δcp=-{move_assessment.loss_vs_best}")
+                    
+                    # Brilliant move indicator
+                    if move_assessment.brilliant:
+                        comment_parts.append("!! Brilliant")
+                    
+                    # Special characteristics
+                    if move_assessment.is_only_move:
+                        comment_parts.append("[Only move]")
+                    if move_assessment.is_sacrifice:
+                        comment_parts.append("[Sacrifice]")
+                    if move_assessment.is_surprise:
+                        comment_parts.append("[Surprise]")
+                    
+                    # Combine comments
+                    if comment_parts:
+                        node.variations[0].comment = " ".join(comment_parts)
         
-        # Export to PGN string
         return str(game)
     
-    def _annotate_moves(self, game: chess.pgn.Game, assessments: List[MoveAssessment]) -> None:
-        """Annotate moves in the game with analysis results."""
-        # Create a mapping of move number to assessment
-        assessment_map = {}
-        for assessment in assessments:
-            assessment_map[assessment.move_number] = assessment
+    def create_player_accuracy_table(self, game_analysis: GameAnalysis) -> Table:
+        """Create a detailed player accuracy table in Chess.com style."""
+        table = Table(title="Player Accuracy Analysis", show_header=True, header_style="bold magenta")
         
-        # Traverse the game and annotate moves
-        board = game.board()
-        move_number = 1
+        # Add columns
+        table.add_column("Metric", style="cyan", no_wrap=True)
+        table.add_column("White", style="white", justify="center")
+        table.add_column("Black", style="white", justify="center")
+        table.add_column("Difference", style="yellow", justify="center")
         
-        for node in game.mainline():
-            if node.move and move_number in assessment_map:
-                assessment = assessment_map[move_number]
-                
-                # Add NAG (Numeric Annotation Glyph)
-                nag = self._get_nag(assessment.label)
-                if nag:
-                    node.nags.add(nag)
-                
-                # Add comments
-                comments = self._generate_comments(assessment)
-                if comments:
-                    node.comment = " ".join(comments)
-                
-                # Make the move
-                board.push(node.move)
-                move_number += 1
+        if not game_analysis.white_stats or not game_analysis.black_stats:
+            return table
+        
+        ws = game_analysis.white_stats
+        bs = game_analysis.black_stats
+        
+        # Player names
+        table.add_row("Player", ws.name, bs.name, "")
+        
+        # Total moves
+        table.add_row("Total Moves", str(ws.total_moves), str(bs.total_moves), "")
+        
+        # Move quality breakdown
+        table.add_row("", "", "", "")
+        table.add_row("Move Quality Breakdown:", "", "", "")
+        
+        # Top moves
+        diff = ws.top_moves - bs.top_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Top", f"{ws.top_moves} ({ws.top_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.top_moves} ({bs.top_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
+        # Excellent moves
+        diff = ws.excellent_moves - bs.excellent_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Excellent", f"{ws.excellent_moves} ({ws.excellent_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.excellent_moves} ({bs.excellent_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
+        # Good moves
+        diff = ws.good_moves - bs.good_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Good", f"{ws.good_moves} ({ws.good_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.good_moves} ({bs.good_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
+        # Mistakes
+        diff = ws.mistake_moves - bs.mistake_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Mistake", f"{ws.mistake_moves} ({ws.mistake_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.mistake_moves} ({bs.mistake_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
+        # Blunders
+        diff = ws.blunder_moves - bs.blunder_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Blunder", f"{ws.blunder_moves} ({ws.blunder_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.blunder_moves} ({bs.blunder_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
+        # Brilliant moves
+        diff = ws.brilliant_moves - bs.brilliant_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Brilliant", str(ws.brilliant_moves), str(bs.brilliant_moves), diff_str)
+        
+        # Summary statistics
+        table.add_row("", "", "", "")
+        table.add_row("Summary Statistics:", "", "", "")
+        
+        # Accuracy
+        diff = ws.accuracy_percentage - bs.accuracy_percentage
+        diff_str = f"+{diff:.1f}%" if diff > 0 else f"{diff:.1f}%" if diff < 0 else "0.0%"
+        table.add_row("  Accuracy", f"{ws.accuracy_percentage:.1f}%", f"{bs.accuracy_percentage:.1f}%", diff_str)
+        
+        # Blunder rate
+        diff = bs.blunder_rate - ws.blunder_rate  # Lower is better
+        diff_str = f"+{diff:.1f}%" if diff > 0 else f"{diff:.1f}%" if diff < 0 else "0.0%"
+        table.add_row("  Blunder Rate", f"{ws.blunder_rate:.1f}%", f"{bs.blunder_rate:.1f}%", diff_str)
+        
+        # Average CP loss
+        diff = bs.average_cp_loss - ws.average_cp_loss  # Lower is better
+        diff_str = f"+{diff:.1f}" if diff > 0 else f"{diff:.1f}" if diff < 0 else "0.0"
+        table.add_row("  Avg CP Loss", f"{ws.average_cp_loss:.1f}", f"{bs.average_cp_loss:.1f}", diff_str)
+        
+        return table
     
-    def _get_nag(self, label: str) -> Optional[int]:
-        """Get NAG value for a move label."""
-        nag_string = self.nag_mapping.get(label)
-        if nag_string == "!":
-            return chess.pgn.NAG_GOOD_MOVE
-        elif nag_string == "!!":
-            return chess.pgn.NAG_BRILLIANT_MOVE
-        elif nag_string == "!?":
-            return chess.pgn.NAG_SPECULATIVE_MOVE
-        elif nag_string == "?":
-            return chess.pgn.NAG_MISTAKE
-        elif nag_string == "??":
-            return chess.pgn.NAG_BLUNDER
-        return None
+    def create_game_summary_panel(self, game_analysis: GameAnalysis) -> Panel:
+        """Create a game summary panel with key statistics."""
+        if not game_analysis.white_stats or not game_analysis.black_stats:
+            return Panel("No game analysis available", title="Game Summary")
+        
+        ws = game_analysis.white_stats
+        bs = game_analysis.black_stats
+        
+        # Determine winner based on accuracy
+        winner = ws.name if ws.accuracy_percentage > bs.accuracy_percentage else bs.name
+        accuracy_diff = abs(ws.accuracy_percentage - bs.accuracy_percentage)
+        
+        content = f"""
+Game Quality: {game_analysis.overall_quality} ({game_analysis.game_accuracy:.1f}% average accuracy)
+
+Winner: {winner} (+{accuracy_diff:.1f}% accuracy advantage)
+
+{ws.name} (White): {ws.accuracy_percentage:.1f}% accuracy, {ws.blunder_rate:.1f}% blunder rate
+{bs.name} (Black): {bs.accuracy_percentage:.1f}% accuracy, {bs.blunder_rate:.1f}% blunder rate
+
+Total Moves: {game_analysis.total_moves}
+Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}
+        """
+        
+        return Panel(content.strip(), title="Game Summary", border_style="green")
     
-    def _generate_comments(self, assessment: MoveAssessment) -> List[str]:
-        """Generate comments for a move assessment."""
-        comments = []
+    def create_cli_summary(self, game_analysis: GameAnalysis) -> str:
+        """Create a comprehensive CLI summary with player accuracy analysis."""
+        if not game_analysis.moves:
+            return "No moves to analyze."
         
-        # Add brilliant comment
-        if assessment.brilliant:
-            comments.append(self.comment_templates["brilliant"])
+        output = []
+        output.append("=" * 80)
+        output.append("CHESS ANALYSIS AI - PLAYER ACCURACY REPORT")
+        output.append("=" * 80)
+        output.append("")
         
-        # Add heuristic comments
-        if assessment.is_only_move:
-            comments.append(self.comment_templates["only_move"])
+        # Game summary panel
+        if game_analysis.white_stats and game_analysis.black_stats:
+            output.append(self.create_game_summary_panel(game_analysis).render())
+            output.append("")
         
-        if assessment.is_sacrifice:
-            comments.append(self.comment_templates["sacrifice"])
+        # Player accuracy table
+        if game_analysis.white_stats and game_analysis.black_stats:
+            output.append(self.create_player_accuracy_table(game_analysis).render())
+            output.append("")
         
-        if assessment.is_surprise:
-            comments.append(self.comment_templates["surprise"])
+        # Move-by-move analysis
+        output.append("=" * 80)
+        output.append("MOVE-BY-MOVE ANALYSIS")
+        output.append("=" * 80)
+        output.append("")
         
-        # Add centipawn gain/loss
-        if assessment.cp_gain != 0:
-            cp_comment = self.comment_templates["cp_gain"].format(assessment.cp_gain)
-            comments.append(cp_comment)
+        # Header
+        output.append(f"{'Move':<6} {'Player':<6} {'Move':<8} {'Quality':<12} {'CP Loss':<10} {'Details'}")
+        output.append("-" * 80)
         
-        # Add loss vs best move
-        if assessment.loss_vs_best > 0:
-            loss_comment = self.comment_templates["loss_vs_best"].format(assessment.loss_vs_best)
-            comments.append(loss_comment)
+        # Moves
+        for move in game_analysis.moves:
+            player = "W" if move.is_white else "B"
+            quality = move.label
+            cp_loss = f"-{move.loss_vs_best}" if move.loss_vs_best > 0 else "0"
+            
+            details = []
+            if move.brilliant:
+                details.append("!! Brilliant")
+            if move.is_only_move:
+                details.append("[Only move]")
+            if move.is_sacrifice:
+                details.append("[Sacrifice]")
+            if move.is_surprise:
+                details.append("[Surprise]")
+            
+            details_str = " ".join(details)
+            
+            output.append(f"{move.move_number:<6} {player:<6} {move.san:<8} {quality:<12} {cp_loss:<10} {details_str}")
         
-        # Add best move if different from played move
-        if assessment.best_move != assessment.move:
-            best_comment = self.comment_templates["best_move"].format(assessment.best_move)
-            comments.append(best_comment)
+        output.append("")
+        output.append("=" * 80)
+        output.append("ANALYSIS COMPLETE")
+        output.append("=" * 80)
         
-        return comments
+        return "\n".join(output)
     
-    def create_summary_table(self, game_analysis: GameAnalysis) -> str:
+    def create_simple_game_summary(self, game_analysis: GameAnalysis) -> str:
+        """Create a simple text-based game summary."""
+        if not game_analysis.white_stats or not game_analysis.black_stats:
+            return "No game analysis available"
+        
+        ws = game_analysis.white_stats
+        bs = game_analysis.black_stats
+        
+        # Determine winner based on accuracy
+        winner = ws.name if ws.accuracy_percentage > bs.accuracy_percentage else bs.name
+        accuracy_diff = abs(ws.accuracy_percentage - bs.accuracy_percentage)
+        
+        content = f"""
+Game Quality: {game_analysis.overall_quality} ({game_analysis.game_accuracy:.1f}% average accuracy)
+
+Winner: {winner} (+{accuracy_diff:.1f}% accuracy advantage)
+
+{ws.name} (White): {ws.accuracy_percentage:.1f}% accuracy, {ws.blunder_rate:.1f}% blunder rate
+{bs.name} (Black): {bs.accuracy_percentage:.1f}% accuracy, {bs.blunder_rate:.1f}% blunder rate
+
+Total Moves: {game_analysis.total_moves}
+Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}
         """
-        Create a summary table of the game analysis.
         
-        Args:
-            game_analysis: GameAnalysis object
-            
-        Returns:
-            Formatted summary table string
-        """
-        lines = []
-        lines.append("=" * 80)
-        lines.append(f"Game Analysis Summary")
-        lines.append("=" * 80)
-        
-        # Game statistics
-        lines.append(f"Total Moves: {game_analysis.total_moves}")
-        lines.append(f"Brilliant Moves: {game_analysis.brilliant_count}")
-        lines.append("")
-        
-        # Move distribution
-        lines.append("Move Quality Distribution:")
-        for label, count in game_analysis.move_counts.items():
-            percentage = (count / game_analysis.total_moves) * 100
-            lines.append(f"  {label.value}: {count} ({percentage:.1f}%)")
-        
-        lines.append("")
-        lines.append("=" * 80)
-        lines.append("Move-by-Move Analysis:")
-        lines.append("=" * 80)
-        
-        # Move details
-        for assessment in game_analysis.moves:
-            color = "W" if assessment.is_white else "B"
-            move_num = assessment.move_number
-            
-            # Format the move line
-            move_line = f"{move_num:2d}. {color} {assessment.move:6s}"
-            
-            # Add label
-            label_str = f"[{assessment.label.value}]"
-            move_line += f" {label_str:12s}"
-            
-            # Add centipawn info
-            cp_str = f"Δcp={assessment.cp_gain:+4d}"
-            move_line += f" {cp_str:10s}"
-            
-            # Add loss vs best
-            if assessment.loss_vs_best > 0:
-                loss_str = f"(-{assessment.loss_vs_best:3d}cp)"
-                move_line += f" {loss_str:10s}"
-            else:
-                move_line += " " * 10
-            
-            # Add brilliant indicator
-            if assessment.brilliant:
-                move_line += " !!"
-            
-            # Add heuristics
-            heuristics = []
-            if assessment.is_only_move:
-                heuristics.append("OM")
-            if assessment.is_sacrifice:
-                heuristics.append("SAC")
-            if assessment.is_surprise:
-                heuristics.append("SUR")
-            
-            if heuristics:
-                move_line += f" [{', '.join(heuristics)}]"
-            
-            lines.append(move_line)
-        
-        return "\n".join(lines)
+        return content.strip()
     
-    def export_json_summary(self, game_analysis: GameAnalysis) -> Dict[str, Any]:
-        """
-        Export game analysis as JSON-compatible dictionary.
+    def create_simple_player_accuracy_table(self, game_analysis: GameAnalysis) -> str:
+        """Create a simple text-based player accuracy table."""
+        if not game_analysis.white_stats or not game_analysis.black_stats:
+            return "No player statistics available"
         
-        Args:
-            game_analysis: GameAnalysis object
-            
-        Returns:
-            Dictionary representation of the analysis
-        """
-        return game_analysis.to_dict()
+        ws = game_analysis.white_stats
+        bs = game_analysis.black_stats
+        
+        output = []
+        output.append("PLAYER ACCURACY ANALYSIS")
+        output.append("=" * 60)
+        output.append("")
+        
+        # Player names
+        output.append(f"{'Metric':<20} {'White':<20} {'Black':<20}")
+        output.append("-" * 60)
+        
+        # Total moves
+        output.append(f"{'Total Moves':<20} {ws.total_moves:<20} {bs.total_moves:<20}")
+        
+        # Move quality breakdown
+        output.append("")
+        output.append("Move Quality Breakdown:")
+        
+        # Top moves
+        diff = ws.top_moves - bs.top_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Top':<20} {ws.top_moves} ({ws.top_moves/ws.total_moves*100:.1f}%){'':<10} {bs.top_moves} ({bs.top_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
+        
+        # Excellent moves
+        diff = ws.excellent_moves - bs.excellent_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Excellent':<20} {ws.excellent_moves} ({ws.excellent_moves/ws.total_moves*100:.1f}%){'':<10} {bs.excellent_moves} ({bs.excellent_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
+        
+        # Good moves
+        diff = ws.good_moves - bs.good_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Good':<20} {ws.good_moves} ({ws.good_moves/ws.total_moves*100:.1f}%){'':<10} {bs.good_moves} ({bs.good_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
+        
+        # Mistakes
+        diff = ws.mistake_moves - bs.mistake_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Mistake':<20} {ws.mistake_moves} ({ws.mistake_moves/ws.total_moves*100:.1f}%){'':<10} {bs.mistake_moves} ({bs.mistake_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
+        
+        # Blunders
+        diff = ws.blunder_moves - bs.blunder_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Blunder':<20} {ws.blunder_moves} ({ws.blunder_moves/ws.total_moves*100:.1f}%){'':<10} {bs.blunder_moves} ({bs.blunder_moves/bs.total_moves*100:.1f}%){'':<10} {diff_str}")
+        
+        # Brilliant moves
+        diff = ws.brilliant_moves - bs.brilliant_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Brilliant':<20} {ws.brilliant_moves:<20} {bs.brilliant_moves:<20} {diff_str}")
+        
+        # Summary statistics
+        output.append("")
+        output.append("Summary Statistics:")
+        
+        # Accuracy
+        diff = ws.accuracy_percentage - bs.accuracy_percentage
+        diff_str = f"+{diff:.1f}%" if diff > 0 else f"{diff:.1f}%" if diff < 0 else "0.0%"
+        output.append(f"{'  Accuracy':<20} {ws.accuracy_percentage:.1f}%{'':<15} {bs.accuracy_percentage:.1f}%{'':<15} {diff_str}")
+        
+        # Blunder rate
+        diff = bs.blunder_rate - ws.blunder_rate  # Lower is better
+        diff_str = f"+{diff:.1f}%" if diff > 0 else f"{diff:.1f}%" if diff < 0 else "0.0%"
+        output.append(f"{'  Blunder Rate':<20} {ws.blunder_rate:.1f}%{'':<15} {bs.blunder_rate:.1f}%{'':<15} {diff_str}")
+        
+        # Average CP loss
+        diff = bs.average_cp_loss - ws.average_cp_loss  # Lower is better
+        diff_str = f"+{diff:.1f}" if diff > 0 else f"{diff:.1f}" if diff < 0 else "0.0"
+        output.append(f"{'  Avg CP Loss':<20} {ws.average_cp_loss:.1f}{'':<15} {bs.average_cp_loss:.1f}{'':<15} {diff_str}")
+        
+        return "\n".join(output)
     
     def batch_annotate_games(self, game_analyses: List[GameAnalysis]) -> List[str]:
-        """
-        Annotate multiple games.
-        
-        Args:
-            game_analyses: List of GameAnalysis objects
-            
-        Returns:
-            List of annotated PGN strings
-        """
-        annotated_pgns = []
-        
-        for game_analysis in game_analyses:
-            try:
-                annotated_pgn = self.annotate_game(game_analysis)
-                annotated_pgns.append(annotated_pgn)
-            except Exception as e:
-                logger.error(f"Failed to annotate game: {e}")
-                # Return original PGN if annotation fails
-                annotated_pgns.append(game_analysis.pgn)
-        
-        return annotated_pgns
+        """Annotate multiple games and return annotated PGNs."""
+        return [self.annotate_game(game) for game in game_analyses]
     
     def create_batch_summary(self, game_analyses: List[GameAnalysis]) -> str:
-        """
-        Create a summary of multiple game analyses.
-        
-        Args:
-            game_analyses: List of GameAnalysis objects
-            
-        Returns:
-            Formatted batch summary string
-        """
+        """Create a summary of batch analysis results."""
         if not game_analyses:
-            return "No games to analyze."
+            return "No games analyzed."
         
-        lines = []
-        lines.append("=" * 80)
-        lines.append(f"Batch Analysis Summary - {len(game_analyses)} Games")
-        lines.append("=" * 80)
+        output = []
+        output.append("=" * 80)
+        output.append("BATCH ANALYSIS SUMMARY")
+        output.append("=" * 80)
+        output.append("")
         
-        # Overall statistics
+        total_games = len(game_analyses)
         total_moves = sum(game.total_moves for game in game_analyses)
-        total_brilliant = sum(game.brilliant_count for game in game_analyses)
+        total_brilliant = sum(
+            (game.white_stats.brilliant_moves if game.white_stats else 0) + 
+            (game.black_stats.brilliant_moves if game.black_stats else 0) 
+            for game in game_analyses
+        )
         
-        lines.append(f"Total Games: {len(game_analyses)}")
-        lines.append(f"Total Moves: {total_moves}")
-        lines.append(f"Total Brilliant Moves: {total_brilliant}")
-        lines.append("")
+        output.append(f"Total Games Analyzed: {total_games}")
+        output.append(f"Total Moves Analyzed: {total_moves}")
+        output.append(f"Total Brilliant Moves: {total_brilliant}")
+        output.append("")
         
-        # Per-game summary
-        for i, game_analysis in enumerate(game_analyses, 1):
-            lines.append(f"Game {i}:")
-            lines.append(f"  Moves: {game_analysis.total_moves}")
-            lines.append(f"  Brilliant: {game_analysis.brilliant_count}")
-            
-            # Top quality moves
-            top_moves = game_analysis.move_counts.get("Top", 0)
-            excellent_moves = game_analysis.move_counts.get("Excellent", 0)
-            lines.append(f"  Top/Excellent: {top_moves}/{excellent_moves}")
-            lines.append("")
+        # Game-by-game summary
+        for i, game in enumerate(game_analyses, 1):
+            if game.white_stats and game.black_stats:
+                winner = game.white_stats.name if game.white_stats.accuracy_percentage > game.black_stats.accuracy_percentage else game.black_stats.name
+                accuracy_diff = abs(game.white_stats.accuracy_percentage - game.black_stats.accuracy_percentage)
+                
+                output.append(f"Game {i}: {game.white_stats.name} vs {game.black_stats.black_stats.name}")
+                output.append(f"  Winner: {winner} (+{accuracy_diff:.1f}% accuracy)")
+                output.append(f"  Quality: {game.overall_quality} ({game.game_accuracy:.1f}% avg)")
+                output.append(f"  Moves: {game.total_moves}")
+                output.append("")
         
-        return "\n".join(lines)
+        return "\n".join(output)

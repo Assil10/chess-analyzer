@@ -1,17 +1,19 @@
 """
-Unit tests for chess analysis models.
+Unit tests for chess analysis data models.
 """
 
 import pytest
-from chess_analyzer.models import MoveLabel, MoveAssessment, GameAnalysis, AnalysisResult
 import chess.pgn
+from io import StringIO
+
+from chess_analyzer.models import MoveLabel, MoveAssessment, GameAnalysis, AnalysisResult, PlayerStats
 
 
 class TestMoveLabel:
     """Test MoveLabel enum."""
     
     def test_move_label_values(self):
-        """Test that MoveLabel has correct values."""
+        """Test that MoveLabel has the expected values."""
         assert MoveLabel.TOP == "Top"
         assert MoveLabel.EXCELLENT == "Excellent"
         assert MoveLabel.GOOD == "Good"
@@ -19,22 +21,64 @@ class TestMoveLabel:
         assert MoveLabel.BLUNDER == "Blunder"
 
 
+class TestPlayerStats:
+    """Test PlayerStats class."""
+    
+    def test_player_stats_creation(self):
+        """Test PlayerStats creation with basic data."""
+        stats = PlayerStats(name="Test Player")
+        assert stats.name == "Test Player"
+        assert stats.total_moves == 0
+        assert stats.accuracy_percentage == 0.0
+        assert stats.blunder_rate == 0.0
+    
+    def test_player_stats_calculations(self):
+        """Test that PlayerStats calculates percentages correctly."""
+        stats = PlayerStats(
+            name="Test Player",
+            total_moves=10,
+            top_moves=5,
+            excellent_moves=2,
+            good_moves=1,
+            mistake_moves=1,
+            blunder_moves=1,
+            total_cp_loss=100
+        )
+        
+        # Trigger post_init calculations
+        stats.__post_init__()
+        
+        assert stats.accuracy_percentage == 80.0  # (5+2+1)/10 * 100
+        assert stats.blunder_rate == 10.0  # 1/10 * 100
+        assert stats.average_cp_loss == 10.0  # 100/10
+    
+    def test_player_stats_to_dict(self):
+        """Test PlayerStats serialization."""
+        stats = PlayerStats(name="Test Player", total_moves=5, top_moves=3)
+        stats.__post_init__()
+        
+        result = stats.to_dict()
+        assert result["name"] == "Test Player"
+        assert result["total_moves"] == 5
+        assert result["top_moves"] == 3
+        assert result["accuracy_percentage"] == 60.0
+
+
 class TestMoveAssessment:
-    """Test MoveAssessment dataclass."""
+    """Test MoveAssessment class."""
     
     def test_move_assessment_creation(self):
-        """Test creating a MoveAssessment instance."""
+        """Test MoveAssessment creation with required fields."""
         assessment = MoveAssessment(
             move="e4",
             move_number=1,
             is_white=True,
             san="e4",
             uci="e2e4",
-            cp_gain=30,
+            cp_gain=50,
             loss_vs_best=0,
             best_move="e4",
-            label=MoveLabel.TOP,
-            brilliant=True
+            label=MoveLabel.TOP
         )
         
         assert assessment.move == "e4"
@@ -42,17 +86,13 @@ class TestMoveAssessment:
         assert assessment.is_white is True
         assert assessment.san == "e4"
         assert assessment.uci == "e2e4"
-        assert assessment.cp_gain == 30
+        assert assessment.cp_gain == 50
         assert assessment.loss_vs_best == 0
         assert assessment.best_move == "e4"
         assert assessment.label == MoveLabel.TOP
-        assert assessment.brilliant is True
-        assert assessment.is_only_move is False
-        assert assessment.is_sacrifice is False
-        assert assessment.is_surprise is False
     
     def test_move_assessment_defaults(self):
-        """Test MoveAssessment with default values."""
+        """Test MoveAssessment default values."""
         assessment = MoveAssessment(
             move="e4",
             move_number=1,
@@ -77,38 +117,41 @@ class TestMoveAssessment:
         assert assessment.multipv_count == 3
     
     def test_move_assessment_to_dict(self):
-        """Test MoveAssessment.to_dict() method."""
+        """Test MoveAssessment serialization."""
         assessment = MoveAssessment(
             move="e4",
             move_number=1,
             is_white=True,
             san="e4",
             uci="e2e4",
-            cp_gain=30,
+            cp_gain=50,
             loss_vs_best=0,
             best_move="e4",
-            label=MoveLabel.TOP,
-            brilliant=True
+            label=MoveLabel.TOP
         )
         
         result = assessment.to_dict()
-        
-        assert isinstance(result, dict)
         assert result["move"] == "e4"
-        assert result["label"] == "Top"
-        assert result["brilliant"] is True
-        assert result["cp_gain"] == 30
+        assert result["move_number"] == 1
+        assert result["is_white"] is True
+        assert result["san"] == "e4"
+        assert result["uci"] == "e2e4"
+        assert result["cp_gain"] == 50
+        assert result["loss_vs_best"] == 0
+        assert result["best_move"] == "e4"
+        assert result["label"] == MoveLabel.TOP
 
 
 class TestGameAnalysis:
-    """Test GameAnalysis dataclass."""
+    """Test GameAnalysis class."""
     
     def test_game_analysis_creation(self):
-        """Test creating a GameAnalysis instance."""
+        """Test GameAnalysis creation."""
         # Create a simple game
-        game = chess.pgn.Game()
-        game.add_variation(chess.Move.from_uci("e2e4"))
+        pgn = StringIO("1. e4 e5")
+        game = chess.pgn.read_game(pgn)
         
+        # Create move assessments
         moves = [
             MoveAssessment(
                 move="e4",
@@ -116,79 +159,31 @@ class TestGameAnalysis:
                 is_white=True,
                 san="e4",
                 uci="e2e4",
-                cp_gain=30,
+                cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
                 label=MoveLabel.TOP
-            )
-        ]
-        
-        game_analysis = GameAnalysis(
-            pgn="1. e4",
-            game=game,
-            moves=moves,
-            total_moves=1
-        )
-        
-        assert game_analysis.pgn == "1. e4"
-        assert game_analysis.total_moves == 1
-        assert len(game_analysis.moves) == 1
-        assert game_analysis.white_score == 0.0
-        assert game_analysis.black_score == 0.0
-    
-    def test_game_analysis_post_init(self):
-        """Test GameAnalysis __post_init__ method."""
-        game = chess.pgn.Game()
-        game.add_variation(chess.Move.from_uci("e2e4"))
-        
-        moves = [
-            MoveAssessment(
-                move="e4",
-                move_number=1,
-                is_white=True,
-                san="e4",
-                uci="e2e4",
-                cp_gain=30,
-                loss_vs_best=0,
-                best_move="e4",
-                label=MoveLabel.TOP,
-                brilliant=True
-            ),
-            MoveAssessment(
-                move="e5",
-                move_number=2,
-                is_white=False,
-                san="e5",
-                uci="e7e5",
-                cp_gain=-20,
-                loss_vs_best=50,
-                best_move="e5",
-                label=MoveLabel.EXCELLENT
             )
         ]
         
         game_analysis = GameAnalysis(
             pgn="1. e4 e5",
             game=game,
-            moves=moves,
-            total_moves=2
+            moves=moves
         )
         
-        # Check move counts
-        assert game_analysis.move_counts[MoveLabel.TOP] == 1
-        assert game_analysis.move_counts[MoveLabel.EXCELLENT] == 1
-        assert game_analysis.move_counts[MoveLabel.GOOD] == 0
-        assert game_analysis.move_counts[MoveLabel.MISTAKE] == 0
-        assert game_analysis.move_counts[MoveLabel.BLUNDER] == 0
-        
-        # Check brilliant count
-        assert game_analysis.brilliant_count == 1
+        assert game_analysis.pgn == "1. e4 e5"
+        assert game_analysis.game == game
+        assert len(game_analysis.moves) == 1
+        assert game_analysis.total_moves == 1
     
-    def test_game_analysis_to_dict(self):
-        """Test GameAnalysis.to_dict() method."""
-        game = chess.pgn.Game()
-        game.add_variation(chess.Move.from_uci("e2e4"))
+    def test_game_analysis_post_init(self):
+        """Test that GameAnalysis calculates statistics correctly."""
+        # Create a simple game
+        pgn = StringIO("1. e4 e5")
+        game = chess.pgn.read_game(pgn)
         
+        # Create move assessments
         moves = [
             MoveAssessment(
                 move="e4",
@@ -196,7 +191,7 @@ class TestGameAnalysis:
                 is_white=True,
                 san="e4",
                 uci="e2e4",
-                cp_gain=30,
+                cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
                 label=MoveLabel.TOP
@@ -204,90 +199,63 @@ class TestGameAnalysis:
         ]
         
         game_analysis = GameAnalysis(
-            pgn="1. e4",
+            pgn="1. e4 e5",
             game=game,
-            moves=moves,
-            total_moves=1
+            moves=moves
+        )
+        
+        # Check that player stats were calculated
+        assert game_analysis.white_stats is not None
+        assert game_analysis.black_stats is not None
+        assert game_analysis.white_stats.total_moves == 1
+        assert game_analysis.black_stats.total_moves == 0  # No black moves in this simple game
+        assert game_analysis.white_stats.top_moves == 1
+    
+    def test_game_analysis_to_dict(self):
+        """Test GameAnalysis serialization."""
+        # Create a simple game
+        pgn = StringIO("1. e4 e5")
+        game = chess.pgn.read_game(pgn)
+        
+        # Create move assessments
+        moves = [
+            MoveAssessment(
+                move="e4",
+                move_number=1,
+                is_white=True,
+                san="e4",
+                uci="e2e4",
+                cp_gain=0,
+                loss_vs_best=0,
+                best_move="e4",
+                label=MoveLabel.TOP
+            )
+        ]
+        
+        game_analysis = GameAnalysis(
+            pgn="1. e4 e5",
+            game=game,
+            moves=moves
         )
         
         result = game_analysis.to_dict()
-        
-        assert isinstance(result, dict)
-        assert result["pgn"] == "1. e4"
+        assert result["pgn"] == "1. e4 e5"
         assert result["total_moves"] == 1
-        assert result["brilliant_count"] == 0
+        assert "white_stats" in result
+        assert "black_stats" in result
+        assert "game_accuracy" in result
+        assert "overall_quality" in result
         assert len(result["moves"]) == 1
 
 
 class TestAnalysisResult:
-    """Test AnalysisResult dataclass."""
+    """Test AnalysisResult class."""
     
     def test_analysis_result_creation(self):
-        """Test creating an AnalysisResult instance."""
-        # Create mock game analyses
-        game1 = chess.pgn.Game()
-        game1.add_variation(chess.Move.from_uci("e2e4"))
-        
-        game2 = chess.pgn.Game()
-        game2.add_variation(chess.Move.from_uci("d2d4"))
-        
-        moves1 = [
-            MoveAssessment(
-                move="e4",
-                move_number=1,
-                is_white=True,
-                san="e4",
-                uci="e2e4",
-                cp_gain=30,
-                loss_vs_best=0,
-                best_move="e4",
-                label=MoveLabel.TOP
-            )
-        ]
-        
-        moves2 = [
-            MoveAssessment(
-                move="d4",
-                move_number=1,
-                is_white=True,
-                san="d4",
-                uci="d2d4",
-                cp_gain=25,
-                loss_vs_best=5,
-                best_move="d4",
-                label=MoveLabel.TOP
-            )
-        ]
-        
-        game_analysis1 = GameAnalysis(
-            pgn="1. e4",
-            game=game1,
-            moves=moves1,
-            total_moves=1
-        )
-        
-        game_analysis2 = GameAnalysis(
-            pgn="1. d4",
-            game=game2,
-            moves=moves2,
-            total_moves=1
-        )
-        
-        analysis_result = AnalysisResult(
-            games=[game_analysis1, game_analysis2],
-            total_games=2,
-            total_moves=0
-        )
-        
-        assert analysis_result.total_games == 2
-        assert analysis_result.total_moves == 2  # Calculated in __post_init__
-        assert analysis_result.overall_brilliant_count == 0
-        assert len(analysis_result.overall_move_distribution) == 5  # All MoveLabel values
-    
-    def test_analysis_result_to_dict(self):
-        """Test AnalysisResult.to_dict() method."""
-        game = chess.pgn.Game()
-        game.add_variation(chess.Move.from_uci("e2e4"))
+        """Test AnalysisResult creation."""
+        # Create a simple game analysis
+        pgn = StringIO("1. e4 e5")
+        game = chess.pgn.read_game(pgn)
         
         moves = [
             MoveAssessment(
@@ -296,7 +264,7 @@ class TestAnalysisResult:
                 is_white=True,
                 san="e4",
                 uci="e2e4",
-                cp_gain=30,
+                cp_gain=0,
                 loss_vs_best=0,
                 best_move="e4",
                 label=MoveLabel.TOP
@@ -304,24 +272,48 @@ class TestAnalysisResult:
         ]
         
         game_analysis = GameAnalysis(
-            pgn="1. e4",
+            pgn="1. e4 e5",
             game=game,
-            moves=moves,
-            total_moves=1
+            moves=moves
         )
         
-        analysis_result = AnalysisResult(
-            games=[game_analysis],
-            total_games=1,
-            total_moves=0
+        analysis_result = AnalysisResult(games=[game_analysis])
+        
+        assert len(analysis_result.games) == 1
+        assert analysis_result.total_games == 1
+        assert analysis_result.total_moves == 1
+    
+    def test_analysis_result_to_dict(self):
+        """Test AnalysisResult serialization."""
+        # Create a simple game analysis
+        pgn = StringIO("1. e4 e5")
+        game = chess.pgn.read_game(pgn)
+        
+        moves = [
+            MoveAssessment(
+                move="e4",
+                move_number=1,
+                is_white=True,
+                san="e4",
+                uci="e2e4",
+                cp_gain=0,
+                loss_vs_best=0,
+                best_move="e4",
+                label=MoveLabel.TOP
+            )
+        ]
+        
+        game_analysis = GameAnalysis(
+            pgn="1. e4 e5",
+            game=game,
+            moves=moves
         )
+        
+        analysis_result = AnalysisResult(games=[game_analysis])
         
         result = analysis_result.to_dict()
-        
-        assert isinstance(result, dict)
         assert result["total_games"] == 1
         assert result["total_moves"] == 1
-        assert result["overall_brilliant_count"] == 0
         assert len(result["games"]) == 1
 
 

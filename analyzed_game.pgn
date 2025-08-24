@@ -1,0 +1,16 @@
+[Event "Live Chess"]
+[Site "Chess.com"]
+[Date "2025.08.24"]
+[Round "?"]
+[White "Senpai_gj"]
+[Black "rabeeeb"]
+[Result "1/2-1/2"]
+[TimeControl "600"]
+[WhiteElo "1617"]
+[BlackElo "1103"]
+[Termination "Game drawn by repetition"]
+[ECO "C40"]
+[EndTime "13:40:37 GMT+0000"]
+[Link "https://www.chess.com/game/live/142275695412"]
+
+1. e4 { [MoveLabel.TOP] } 1... e5 { [MoveLabel.TOP] } 2. Nf3 { [MoveLabel.TOP] } 2... d5 { [MoveLabel.BLUNDER] Δcp=-500 } 3. exd5 { [MoveLabel.TOP] Δcp=-15 } 3... Qxd5 { [MoveLabel.TOP] } 4. Nc3 { [MoveLabel.TOP] } 4... Qd6 { [MoveLabel.TOP] } 5. d4 { [MoveLabel.TOP] Δcp=-20 } 5... exd4 { [MoveLabel.TOP] } 6. Qxd4 { [MoveLabel.BLUNDER] Δcp=-500 } 6... Qxd4 { [MoveLabel.TOP] } 7. Nxd4 { [MoveLabel.TOP] } 7... Bb4 { [MoveLabel.TOP] } 8. Bd2 { [MoveLabel.BLUNDER] Δcp=-500 } 8... Bxc3 { [MoveLabel.BLUNDER] Δcp=-500 } 9. Bxc3 { [MoveLabel.TOP] } 9... Nf6 { [MoveLabel.TOP] } 10. Nb5 { [MoveLabel.EXCELLENT] Δcp=-26 } 10... Na6 { [MoveLabel.TOP] } 11. Nd4 { [MoveLabel.BLUNDER] Δcp=-500 } 11... O-O { [MoveLabel.BLUNDER] Δcp=-500 } 12. Bxa6 { [MoveLabel.TOP] } 12... bxa6 { [MoveLabel.TOP] } 13. O-O-O { [MoveLabel.TOP] } 13... Ne4 { [MoveLabel.TOP] } 14. Be1 { [MoveLabel.TOP] } 14... Rd8 { [MoveLabel.TOP] } 15. Nc6 { [MoveLabel.BLUNDER] Δcp=-500 } 15... Rxd1+ { [MoveLabel.TOP] } 16. Kxd1 { [MoveLabel.TOP] } 16... Bb7 { [MoveLabel.TOP] } 17. Nd4 { [MoveLabel.BLUNDER] Δcp=-500 } 17... Rd8 { [MoveLabel.TOP] } 18. c3 { [MoveLabel.TOP] } 18... Ng5 { [MoveLabel.BLUNDER] Δcp=-500 } 19. Kc1 { [MoveLabel.TOP] } 19... Ne6 { [MoveLabel.BLUNDER] Δcp=-500 } 20. Nxe6 { [MoveLabel.TOP] } 20... fxe6 { [MoveLabel.TOP] } 21. f3 { [MoveLabel.TOP] } 21... c5 { [MoveLabel.TOP] } 22. Bh4 { [MoveLabel.BLUNDER] Δcp=-500 } 22... Rd6 { [MoveLabel.BLUNDER] Δcp=-500 } 23. Rd1 { [MoveLabel.BLUNDER] Δcp=-500 } 23... Rxd1+ { [MoveLabel.TOP] } 24. Kxd1 { [MoveLabel.TOP] } 24... Kf7 { [MoveLabel.BLUNDER] Δcp=-500 } 25. Bg3 { [MoveLabel.BLUNDER] Δcp=-500 } 25... g5 { [MoveLabel.BLUNDER] Δcp=-500 } 26. Bb8 { [MoveLabel.EXCELLENT] Δcp=-32 } 26... Bd5 { [MoveLabel.TOP] } 27. b3 { [MoveLabel.TOP] } 27... c4 { [MoveLabel.TOP] } 28. b4 { [MoveLabel.TOP] } 28... e5 { [MoveLabel.BLUNDER] Δcp=-500 } 29. Bxa7 { [MoveLabel.MISTAKE] Δcp=-128 } 29... e4 { [MoveLabel.TOP] } 30. Ke2 { [MoveLabel.TOP] } 30... exf3+ { [MoveLabel.TOP] } 31. gxf3 { [MoveLabel.TOP] } 31... Kf6 { [MoveLabel.BLUNDER] Δcp=-500 } 32. a4 { [MoveLabel.BLUNDER] Δcp=-500 } 32... Kf5 { [MoveLabel.BLUNDER] Δcp=-500 } 33. Ke3 { [MoveLabel.EXCELLENT] Δcp=-33 } 33... g4 { [MoveLabel.BLUNDER] Δcp=-500 } 34. fxg4+ { [MoveLabel.TOP] } 34... Kxg4 { [MoveLabel.TOP] } 35. b5 { [MoveLabel.TOP] } 35... axb5 { [MoveLabel.TOP] } 36. axb5 { [MoveLabel.TOP] } 36... h5 { [MoveLabel.TOP] } 37. Kf2 { [MoveLabel.BLUNDER] Δcp=-500 } 37... Kh3 { [MoveLabel.BLUNDER] Δcp=-500 } 38. Kg1 { [MoveLabel.BLUNDER] Δcp=-500 } 38... Kg4 { [MoveLabel.TOP] } 39. Kf2 { [MoveLabel.TOP] Δcp=-2 } 39... Kh3 { [MoveLabel.BLUNDER] Δcp=-500 } 40. Kg1 { [MoveLabel.BLUNDER] Δcp=-500 } 40... Kg4 { [MoveLabel.TOP] } 41. Kf2 { [MoveLabel.TOP] Δcp=-4 } 1/2-1/2
