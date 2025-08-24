@@ -10,7 +10,22 @@ A Python project that analyzes chess games (PGN input) using Stockfish and label
 ✅ **FastAPI endpoints ready**  
 ✅ **Real game analysis successful**  
 ✅ **Repository optimized (100% Python)**  
-✅ **Clean structure with minimal dependencies**
+✅ **Clean structure with minimal dependencies**  
+✅ **Engine stability and error handling improved**
+
+## 🔧 **Recent Engine Fixes**
+
+The Stockfish engine integration has been significantly improved with:
+
+- **Automatic Engine Recovery**: Engine automatically resets if it becomes unresponsive
+- **Board State Validation**: Prevents analysis of invalid board positions
+- **Retry Logic**: Automatic retry with engine reset on analysis failures
+- **Timeout Management**: Configurable analysis timeouts to prevent hanging
+- **Fallback Evaluations**: Material-based evaluation when engine analysis fails
+- **Robust Error Handling**: Graceful degradation instead of crashes
+- **Connection Health Checks**: Regular engine responsiveness testing
+
+These improvements ensure the analyzer runs reliably even with complex positions or engine issues.
 
 ## Features
 
@@ -156,6 +171,39 @@ MIT License - see LICENSE file for details.
 3. Make your changes
 4. Add tests
 5. Submit a pull request
+
+## 🚨 Troubleshooting
+
+### Common Issues and Solutions
+
+#### Engine Connection Problems
+- **"Cannot connect to chess engine"**: Ensure Stockfish executable path is correct and file has execute permissions
+- **"Engine not responsive"**: The analyzer will automatically reset the engine connection
+- **"Analysis timeout"**: Increase timeout with `engine.set_timeout(60.0)` or reduce analysis depth
+
+#### Analysis Errors
+- **"Invalid board state"**: The analyzer will skip invalid positions and continue
+- **"Move not legal"**: Board state validation prevents this error
+- **"Engine analysis failed"**: Automatic retry with engine reset will resolve most issues
+
+#### Performance Issues
+- **Slow analysis**: Reduce `--shallow-depth` and `--deep-depth` parameters
+- **Memory issues**: Reduce `--multipv` parameter (default: 3)
+- **Hanging analysis**: Set shorter timeouts with `--time-limit` parameter
+
+### Testing Engine Fixes
+
+Run the engine test script to verify your setup:
+```bash
+python test_engine_fixes.py
+```
+
+This will test:
+- Basic engine connectivity
+- Position analysis
+- Error handling
+- Timeout management
+- Board state validation
 
 ## Future Features
 

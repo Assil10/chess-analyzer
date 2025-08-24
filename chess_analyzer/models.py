@@ -18,6 +18,7 @@ class MoveLabel(str, Enum):
     GOOD = "Good"
     BOOK = "Book"
     INACCURACY = "Inaccuracy"
+    MISS = "Miss"
     MISTAKE = "Mistake"
     BLUNDER = "Blunder"
 
@@ -34,6 +35,7 @@ class PlayerStats:
     good_moves: int = 0
     book_moves: int = 0
     inaccuracy_moves: int = 0
+    miss_moves: int = 0
     mistake_moves: int = 0
     blunder_moves: int = 0
     accuracy_percentage: float = 0.0
@@ -44,12 +46,8 @@ class PlayerStats:
     def __post_init__(self):
         """Calculate derived statistics."""
         if self.total_moves > 0:
-            # Calculate accuracy based on Chess.com system
-            # Brilliant, Great Move, Best Move, Excellent, Good, and Book moves count as accurate
-            self.accuracy_percentage = round(
-                (self.brilliant_moves + self.great_moves + self.best_moves + 
-                 self.excellent_moves + self.good_moves + self.book_moves) / self.total_moves * 100, 1
-            )
+            # Accuracy is now calculated in the main loop using weighted penalties
+            # Just calculate blunder rate and average CP loss
             self.blunder_rate = round(self.blunder_moves / self.total_moves * 100, 1)
             self.average_cp_loss = round(self.total_cp_loss / self.total_moves, 1)
     
@@ -65,6 +63,7 @@ class PlayerStats:
             "good_moves": self.good_moves,
             "book_moves": self.book_moves,
             "inaccuracy_moves": self.inaccuracy_moves,
+            "miss_moves": self.miss_moves,
             "mistake_moves": self.mistake_moves,
             "blunder_moves": self.blunder_moves,
             "accuracy_percentage": self.accuracy_percentage,
@@ -157,32 +156,56 @@ class GameAnalysis:
         """Create player statistics from moves."""
         stats = PlayerStats(name=name, total_moves=len(moves))
         
+        # Calculate weighted penalties for accuracy
+        total_penalty = 0
+        
         for move in moves:
             stats.total_cp_loss += abs(move.loss_vs_best)
             
+            # Calculate penalty based on move quality
             if move.label == MoveLabel.BRILLIANT:
                 stats.brilliant_moves += 1
+                penalty = 0  # Brilliant moves get no penalty
             elif move.label == MoveLabel.GREAT_MOVE:
                 stats.great_moves += 1
+                penalty = 0  # Great moves get no penalty
             elif move.label == MoveLabel.BEST_MOVE:
                 stats.best_moves += 1
+                penalty = 0  # Best moves get no penalty
             elif move.label == MoveLabel.EXCELLENT:
                 stats.excellent_moves += 1
+                penalty = 2  # Excellent: 2 penalty
             elif move.label == MoveLabel.GOOD:
                 stats.good_moves += 1
+                penalty = 5  # Good: 5 penalty
             elif move.label == MoveLabel.BOOK:
                 stats.book_moves += 1
+                penalty = 0  # Book moves get no penalty
             elif move.label == MoveLabel.INACCURACY:
                 stats.inaccuracy_moves += 1
+                penalty = 10  # Inaccuracy: 10 penalty
+            elif move.label == MoveLabel.MISS:
+                stats.miss_moves += 1
+                penalty = 15  # Miss: 15 penalty (between Inaccuracy and Mistake)
             elif move.label == MoveLabel.MISTAKE:
                 stats.mistake_moves += 1
+                penalty = 20  # Mistake: 20 penalty
             elif move.label == MoveLabel.BLUNDER:
                 stats.blunder_moves += 1
+                penalty = 40  # Blunder: 40 penalty (reduced from 50)
+            else:
+                penalty = 0
+            
+            total_penalty += penalty
             
             if move.brilliant:
                 stats.brilliant_moves += 1
         
-        # Trigger post_init to calculate percentages
+        # Calculate accuracy using weighted penalty system
+        if stats.total_moves > 0:
+            stats.accuracy_percentage = round(100 - (total_penalty / stats.total_moves), 1)
+        
+        # Trigger post_init to calculate other percentages
         stats.__post_init__()
         return stats
     

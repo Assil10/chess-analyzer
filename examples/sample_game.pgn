@@ -1,22 +1,36 @@
 [Event "Live Chess"]
 [Site "Chess.com"]
-[Date "2025.08.24"]
-[Round "?"]
-[White "Senpai_gj"]
-[Black "rabeeeb"]
-[Result "1/2-1/2"]
+[Date "2025.08.21"]
+[Round "-"]
+[White "rabeeeb"]
+[Black "Senpai_gj"]
+[Result "0-1"]
+[CurrentPosition "8/p6R/4k1p1/6P1/P5R1/1Pr5/6PK/4q2r w - - 1 45"]
+[Timezone "UTC"]
+[ECO "B12"]
+[ECOUrl "https://www.chess.com/openings/Caro-Kann-Defense-Advance-Botvinnik-Carls-Defense-4.Nf3-cxd4"]
+[UTCDate "2025.08.21"]
+[UTCTime "22:34:58"]
+[WhiteElo "1103"]
+[BlackElo "1542"]
 [TimeControl "600"]
-[WhiteElo "1617"]
-[BlackElo "1103"]
-[Termination "Game drawn by repetition"]
-[ECO "C40"]
-[EndTime "13:40:37 GMT+0000"]
-[Link "https://www.chess.com/game/live/142275695412"]
+[Termination "Senpai_gj won by checkmate"]
+[StartTime "22:34:58"]
+[EndDate "2025.08.21"]
+[EndTime "22:54:30"]
+[Link "https://www.chess.com/analysis/game/live/142173640156/analysis"]
+[WhiteUrl "https://images.chesscomfiles.com/uploads/v1/user/151306519.2335a837.50x50o.627a6cf591c1.jpg"]
+[WhiteCountry "219"]
+[WhiteTitle ""]
+[BlackUrl "https://images.chesscomfiles.com/uploads/v1/user/354455083.47f4e442.50x50o.a3a4e5718769.jpg"]
+[BlackCountry "219"]
+[BlackTitle ""]
 
-1. e4 e5 2. Nf3 d5 3. exd5 Qxd5 4. Nc3 Qd6 5. d4 exd4 6. Qxd4 Qxd4 7. Nxd4 Bb4
-8. Bd2 Bxc3 9. Bxc3 Nf6 10. Nb5 Na6 11. Nd4 O-O 12. Bxa6 bxa6 13. O-O-O Ne4 14.
-Be1 Rd8 15. Nc6 Rxd1+ 16. Kxd1 Bb7 17. Nd4 Rd8 18. c3 Ng5 19. Kc1 Ne6 20. Nxe6
-fxe6 21. f3 c5 22. Bh4 Rd6 23. Rd1 Rxd1+ 24. Kxd1 Kf7 25. Bg3 g5 26. Bb8 Bd5 27.
-b3 c4 28. b4 e5 29. Bxa7 e4 30. Ke2 exf3+ 31. gxf3 Kf6 32. a4 Kf5 33. Ke3 g4 34.
-fxg4+ Kxg4 35. b5 axb5 36. axb5 h5 37. Kf2 Kh3 38. Kg1 Kg4 39. Kf2 Kh3 40. Kg1
-Kg4 41. Kf2 1/2-1/2
+1. e4 c6 2. d4 d5 3. e5 c5 4. Nf3 cxd4 5. Qxd4 Nc6 6. Qd1 $6 Bg4 7. Be2 $6 e6 8.
+O-O $2 Bxf3 $1 9. Bxf3 Nxe5 10. Bf4 Bd6 $6 11. Nc3 $2 Nxf3+ 12. Qxf3 Bxf4 13. Qxf4 Qb6 $2
+14. b3 $9 Nf6 15. Ne2 Ne4 $2 16. Ng3 $6 Nc3 $4 17. Kh1 $9 Qa6 $9 18. a4 $9 Rc8 19. Nh5
+O-O $2 20. Qg5 $1 g6 21. Nf6+ $1 Kg7 22. Ng4 $2 f5 $1 23. Qh6+ Kg8 $1 24. Ne5 Qd6 $1 25. f4
+Ne4 26. h4 $2 Rxc2 27. h5 Ng3+ 28. Kh2 Nxh5 29. Rf3 Qe7 30. Rh3 Nf6 31. Qg5 Ng4+
+32. Nxg4 Qxg5 33. fxg5 fxg4 $1 34. Rg3 Rff2 35. Rg1 e5 36. Rxg4 e4 37. Kh3 e3 38.
+Rd1 e2 39. Rxd5 $6 e1=Q 40. Rd8+ Kf7 41. Rd7+ Ke6 42. Rxb7 Rc3+ 43. Kh2 Rf1 44.
+Rxh7 $6 Rh1# 0-1

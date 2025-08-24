@@ -118,6 +118,12 @@ class PGNAnnotator:
         table.add_row("  Mistake", f"{ws.mistake_moves} ({ws.mistake_moves/ws.total_moves*100:.1f}%)", 
                      f"{bs.mistake_moves} ({bs.mistake_moves/bs.total_moves*100:.1f}%)", diff_str)
         
+        # Miss moves
+        diff = ws.miss_moves - bs.miss_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        table.add_row("  Miss", f"{ws.miss_moves} ({ws.miss_moves/ws.total_moves*100:.1f}%)", 
+                     f"{bs.miss_moves} ({bs.miss_moves/bs.total_moves*100:.1f}%)", diff_str)
+        
         # Blunders
         diff = ws.blunder_moves - bs.blunder_moves
         diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
@@ -210,18 +216,38 @@ Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}
         # Moves
         for move in game_analysis.moves:
             player = "W" if move.is_white else "B"
-            quality = move.label
+            
+            # Show exact quality labels as requested
+            if move.label == MoveLabel.BRILLIANT:
+                quality = "Brilliant"
+            elif move.label == MoveLabel.BEST_MOVE:
+                quality = "Best"
+            elif move.label == MoveLabel.EXCELLENT:
+                quality = "Excellent"
+            elif move.label == MoveLabel.GOOD:
+                quality = "Good"
+            elif move.label == MoveLabel.INACCURACY:
+                quality = "Inaccuracy"
+            elif move.label == MoveLabel.MISTAKE:
+                quality = "Mistake"
+            elif move.label == MoveLabel.BLUNDER:
+                quality = "Blunder"
+            elif move.label == MoveLabel.BOOK:
+                quality = "Book"
+            else:
+                quality = str(move.label)
+            
             cp_loss = f"-{move.loss_vs_best}" if move.loss_vs_best > 0 else "0"
             
             details = []
             if move.brilliant:
-                details.append("!! Brilliant")
+                details.append("!!")
             if move.is_only_move:
-                details.append("[Only move]")
+                details.append("[Only]")
             if move.is_sacrifice:
-                details.append("[Sacrifice]")
+                details.append("[Sac]")
             if move.is_surprise:
-                details.append("[Surprise]")
+                details.append("[Surp]")
             
             details_str = " ".join(details)
             
@@ -323,6 +349,11 @@ Brilliant Moves: {ws.brilliant_moves + bs.brilliant_moves}
         diff = ws.mistake_moves - bs.mistake_moves
         diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
         output.append(f"{'  Mistake':<20} {ws.mistake_moves:<20} {bs.mistake_moves:<20} {diff_str}")
+        
+        # Miss moves
+        diff = ws.miss_moves - bs.miss_moves
+        diff_str = f"+{diff}" if diff > 0 else str(diff) if diff < 0 else "0"
+        output.append(f"{'  Miss':<20} {ws.miss_moves:<20} {bs.miss_moves:<20} {diff_str}")
         
         # Blunders
         diff = ws.blunder_moves - bs.blunder_moves
