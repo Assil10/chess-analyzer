@@ -8,18 +8,177 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/chess.js@1.0.0-beta.6/dist/chess.min.js"></script>
-    <script src="https://unpkg.com/chessboardjsx@2.4.6/dist/chessboardjsx.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 480px;
+            height: 480px;
+            border: 3px solid #333;
+            border-radius: 6px;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        .chess-square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+        .chess-square:hover {
+            background-color: rgba(255, 255, 0, 0.4);
+        }
+        .white-square {
+            background-color: #f0d9b5;
+        }
+        .black-square {
+            background-color: #b58863;
+        }
+        .piece {
+            user-select: none;
+            pointer-events: none;
+            font-family: 'Arial Unicode MS', 'Segoe UI Symbol', sans-serif;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .move-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(0, 255, 0, 0.7);
+            border: 2px solid rgba(0, 200, 0, 0.9);
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
         // React hooks
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
         const { createRoot } = ReactDOM;
         
-        // Simple Chess Viewer Component (without chess.js dependency for now)
+        // Better chess piece Unicode characters
+        const PIECES = {
+            'white': {
+                'king': '♔',
+                'queen': '♕',
+                'rook': '♖',
+                'bishop': '♗',
+                'knight': '♘',
+                'pawn': '♙'
+            },
+            'black': {
+                'king': '♚',
+                'queen': '♛',
+                'rook': '♜',
+                'bishop': '♝',
+                'knight': '♞',
+                'pawn': '♟'
+            }
+        };
+
+        // Starting position for chess board
+        const STARTING_POSITION = {
+            'a8': { type: 'rook', color: 'b' },
+            'b8': { type: 'knight', color: 'b' },
+            'c8': { type: 'bishop', color: 'b' },
+            'd8': { type: 'queen', color: 'b' },
+            'e8': { type: 'king', color: 'b' },
+            'f8': { type: 'bishop', color: 'b' },
+            'g8': { type: 'knight', color: 'b' },
+            'h8': { type: 'rook', color: 'b' },
+            'a7': { type: 'pawn', color: 'b' },
+            'b7': { type: 'pawn', color: 'b' },
+            'c7': { type: 'pawn', color: 'b' },
+            'd7': { type: 'pawn', color: 'b' },
+            'e7': { type: 'pawn', color: 'b' },
+            'f7': { type: 'pawn', color: 'b' },
+            'g7': { type: 'pawn', color: 'b' },
+            'h7': { type: 'pawn', color: 'b' },
+            'a2': { type: 'pawn', color: 'w' },
+            'b2': { type: 'pawn', color: 'w' },
+            'c2': { type: 'pawn', color: 'w' },
+            'd2': { type: 'pawn', color: 'w' },
+            'e2': { type: 'pawn', color: 'w' },
+            'f2': { type: 'pawn', color: 'w' },
+            'g2': { type: 'pawn', color: 'w' },
+            'h2': { type: 'pawn', color: 'w' },
+            'a1': { type: 'rook', color: 'w' },
+            'b1': { type: 'knight', color: 'w' },
+            'c1': { type: 'bishop', color: 'w' },
+            'd1': { type: 'queen', color: 'w' },
+            'e1': { type: 'king', color: 'w' },
+            'f1': { type: 'bishop', color: 'w' },
+            'g1': { type: 'knight', color: 'w' },
+            'h1': { type: 'rook', color: 'w' }
+        };
+
+        // Custom Chess Board Component
+        const ChessBoard = ({ position, isFlipped, onSquareClick, selectedSquare }) => {
+            const renderSquare = (file, rank) => {
+                // Fix square coloring - proper chess board pattern
+                const isWhiteSquare = (file + rank) % 2 === 0;
+                const squareClass = `chess-square ${isWhiteSquare ? 'white-square' : 'black-square'}`;
+                
+                // Calculate square name based on orientation
+                let squareName;
+                if (isFlipped) {
+                    // When flipped, reverse both file and rank
+                    squareName = String.fromCharCode(97 + (7 - file)) + (rank + 1);
+                } else {
+                    // Normal orientation: files a-h, ranks 8-1
+                    squareName = String.fromCharCode(97 + file) + (8 - rank);
+                }
+                
+                const piece = position[squareName];
+                let pieceDisplay = '';
+                
+                if (piece) {
+                    const color = piece.color === 'w' ? 'white' : 'black';
+                    const type = piece.type;
+                    pieceDisplay = PIECES[color][type];
+                }
+
+                const isSelected = selectedSquare === squareName;
+
+                return (
+                    <div
+                        key={squareName}
+                        className={squareClass}
+                        onClick={() => onSquareClick(squareName)}
+                        data-square={squareName}
+                    >
+                        {pieceDisplay && <span className="piece">{pieceDisplay}</span>}
+                        {isSelected && <div className="move-indicator"></div>}
+                    </div>
+                );
+            };
+
+            const files = [0, 1, 2, 3, 4, 5, 6, 7];
+            const ranks = isFlipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+
+            return (
+                <div className="chess-board">
+                    {ranks.map(rank => 
+                        files.map(file => renderSquare(file, rank))
+                    )}
+                </div>
+            );
+        };
+
+        // Chess Viewer Component with Real Board
         const ChessBoardViewer = ({ 
           pgn, 
           moves = [], 
@@ -27,65 +186,124 @@
           className = "" 
         }) => {
           const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
-          const [isPlaying, setIsPlaying] = useState(false);
           const [isFlipped, setIsFlipped] = useState(false);
           const [moveHistory, setMoveHistory] = useState([]);
-          const [currentPosition, setCurrentPosition] = useState('start');
+          const [currentPosition, setCurrentPosition] = useState(STARTING_POSITION);
+          const [chess, setChess] = useState(null);
+          const [selectedSquare, setSelectedSquare] = useState(null);
 
-          // Simple move history from PGN
+          // Initialize chess game from PGN
           useEffect(() => {
-            if (pgn) {
-              // Extract moves from PGN (simple parsing)
-              const moveMatches = pgn.match(/\d+\.\s*(\S+)\s+(\S+)/g);
-              if (moveMatches) {
-                const moves = [];
-                moveMatches.forEach(match => {
-                  const parts = match.split(/\s+/);
-                  if (parts.length >= 3) {
-                    moves.push(parts[1]); // White move
-                    if (parts[2]) moves.push(parts[2]); // Black move
-                  }
-                });
-                setMoveHistory(moves);
+            if (pgn && window.Chess) {
+              try {
+                console.log('Loading PGN with chess.js...');
+                const newChess = new window.Chess();
+                newChess.loadPgn(pgn);
+                setChess(newChess);
+                const history = newChess.history({ verbose: true });
+                console.log('Move history loaded:', history.length, 'moves');
+                setMoveHistory(history);
+                // Start with starting position
+                setCurrentPosition(STARTING_POSITION);
+              } catch (error) {
+                console.error('Invalid PGN:', error);
+                // Fallback to simple parsing
+                parsePGNManually(pgn);
               }
+            } else if (pgn) {
+              console.log('chess.js not available, using manual parsing');
+              parsePGNManually(pgn);
+            } else {
+              console.log('No PGN provided, using starting position');
+              setCurrentPosition(STARTING_POSITION);
             }
           }, [pgn]);
 
-          // Auto-play effect
-          useEffect(() => {
-            if (!isPlaying || currentMoveIndex >= moveHistory.length - 1) {
-              setIsPlaying(false);
-              return;
+          // Manual PGN parsing fallback
+          const parsePGNManually = (pgn) => {
+            console.log('Parsing PGN manually...');
+            const moveMatches = pgn.match(/\d+\.\s*(\S+)\s+(\S+)/g);
+            if (moveMatches) {
+              const moves = [];
+              moveMatches.forEach(match => {
+                const parts = match.split(/\s+/);
+                if (parts.length >= 3) {
+                  moves.push(parts[1]); // White move
+                  if (parts[2]) moves.push(parts[2]); // Black move
+                }
+              });
+              console.log('Manual parsing found:', moves.length, 'moves');
+              setMoveHistory(moves);
             }
+          };
 
-            const timer = setTimeout(() => {
-              setCurrentMoveIndex(prev => prev + 1);
-            }, 1000);
-
-            return () => clearTimeout(timer);
-          }, [isPlaying, currentMoveIndex, moveHistory.length]);
+          // Update board position based on current move
+          useEffect(() => {
+            if (chess && moveHistory.length > 0 && currentMoveIndex >= 0) {
+              try {
+                console.log('Updating position for move:', currentMoveIndex);
+                const newChess = new window.Chess();
+                // Apply moves up to current index
+                for (let i = 0; i <= currentMoveIndex; i++) {
+                  if (moveHistory[i] && moveHistory[i].san) {
+                    const result = newChess.move(moveHistory[i].san);
+                    if (!result) {
+                      console.error('Invalid move at index', i, moveHistory[i]);
+                    }
+                  }
+                }
+                const newPosition = newChess.board();
+                console.log('New position:', newPosition);
+                setCurrentPosition(newPosition);
+              } catch (error) {
+                console.error('Error updating position:', error);
+              }
+            } else if (currentMoveIndex === -1) {
+              // Reset to starting position
+              setCurrentPosition(STARTING_POSITION);
+            }
+          }, [currentMoveIndex, moveHistory, chess]);
 
           // Navigation functions
-          const goToStart = () => setCurrentMoveIndex(-1);
-          const goToEnd = () => setCurrentMoveIndex(moveHistory.length - 1);
-          const goToPrevious = () => setCurrentMoveIndex(prev => Math.max(-1, prev - 1));
-          const goToNext = () => setCurrentMoveIndex(prev => Math.min(moveHistory.length - 1, prev + 1));
-          const goToMove = (index) => setCurrentMoveIndex(index);
-
-          // Play/Pause toggle
-          const togglePlay = () => {
-            if (isPlaying) {
-              setIsPlaying(false);
-            } else {
-              if (currentMoveIndex >= moveHistory.length - 1) {
-                goToStart();
-              }
-              setIsPlaying(true);
-            }
+          const goToStart = () => {
+            console.log('Going to start');
+            setCurrentMoveIndex(-1);
+            setSelectedSquare(null);
+          };
+          
+          const goToEnd = () => {
+            console.log('Going to end');
+            setCurrentMoveIndex(moveHistory.length - 1);
+            setSelectedSquare(null);
+          };
+          
+          const goToPrevious = () => {
+            const newIndex = Math.max(-1, currentMoveIndex - 1);
+            console.log('Going to previous move:', newIndex);
+            setCurrentMoveIndex(newIndex);
+            setSelectedSquare(null);
+          };
+          
+          const goToNext = () => {
+            const newIndex = Math.min(moveHistory.length - 1, currentMoveIndex + 1);
+            console.log('Going to next move:', newIndex);
+            setCurrentMoveIndex(newIndex);
+            setSelectedSquare(null);
+          };
+          
+          const goToMove = (index) => {
+            console.log('Going to move:', index);
+            setCurrentMoveIndex(index);
+            setSelectedSquare(null);
           };
 
           // Flip board
           const flipBoard = () => setIsFlipped(!isFlipped);
+
+          // Handle square click
+          const handleSquareClick = (squareName) => {
+            setSelectedSquare(selectedSquare === squareName ? null : squareName);
+          };
 
           // Get current move analysis
           const getCurrentMoveAnalysis = () => {
@@ -103,25 +321,26 @@
 
           const formatMoveNotation = (index) => {
             if (index < 0 || index >= moveHistory.length) return '';
-            return moveHistory[index] || '';
+            return moveHistory[index]?.san || moveHistory[index] || '';
           };
+
+          // Debug info
+          console.log('Current position:', currentPosition);
+          console.log('Current move index:', currentMoveIndex);
+          console.log('Move history length:', moveHistory.length);
 
           return (
             <div className={`flex gap-6 ${className}`}>
               {/* Left Column - Chess Board */}
               <div className="flex flex-col items-center">
-                {/* Chess Board Placeholder */}
-                <div className="mb-4 w-[400px] h-[400px] bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">♟️</div>
-                    <p className="text-gray-600">Chess Board</p>
-                    <p className="text-sm text-gray-500">Move {currentMoveIndex + 1} of {moveHistory.length}</p>
-                    {currentMoveIndex >= 0 && (
-                      <p className="text-lg font-bold text-gray-800">
-                        {formatMoveNumber(currentMoveIndex)}. {formatMoveNotation(currentMoveIndex)}
-                      </p>
-                    )}
-                  </div>
+                {/* Real Chess Board */}
+                <div className="mb-4">
+                  <ChessBoard
+                    position={currentPosition}
+                    isFlipped={isFlipped}
+                    onSquareClick={handleSquareClick}
+                    selectedSquare={selectedSquare}
+                  />
                 </div>
 
                 {/* Navigation Controls */}
@@ -140,13 +359,6 @@
                     className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                   >
                     ⏪ Previous
-                  </button>
-                  
-                  <button
-                    onClick={togglePlay}
-                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
-                  >
-                    {isPlaying ? '⏸️ Pause' : '▶️ Play'}
                   </button>
                   
                   <button
@@ -187,6 +399,13 @@
                     </p>
                   )}
                 </div>
+
+                {/* Debug Info */}
+                <div className="mt-4 text-xs text-gray-500 text-center">
+                  <p>Position keys: {Object.keys(currentPosition).length}</p>
+                  <p>Chess.js available: {window.Chess ? 'Yes' : 'No'}</p>
+                  <p>Current move: {currentMoveIndex >= 0 ? `${formatMoveNumber(currentMoveIndex)}. ${formatMoveNotation(currentMoveIndex)}` : 'Starting position'}</p>
+                </div>
               </div>
 
               {/* Right Column - Analysis Panel */}
@@ -198,7 +417,8 @@
                   
                   {currentMoveIndex < 0 ? (
                     <div className="text-center text-gray-500 py-8">
-                      <p className="text-lg">Click Play or navigate to see move analysis</p>
+                      <p className="text-lg">Navigate through moves to see analysis</p>
+                      <p className="text-sm mt-2">Use Previous/Next buttons to step through the game</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -269,7 +489,7 @@
                                 <span className="text-gray-600">
                                   {Math.floor(index / 2) + 1}.
                                 </span>{' '}
-                                {move}
+                                {move.san || move}
                               </div>
                             ))}
                           </div>
