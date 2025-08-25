@@ -1,213 +1,202 @@
 # Chess Analysis AI (Top & Brilliant Move Detector)
 
-A Python project that analyzes chess games (PGN input) using Stockfish and labels each move as Top, Excellent, Good, Mistake, Blunder, and optionally flags "Brilliant (!!)" moves based on heuristics.
+A comprehensive chess analysis system that combines Python backend analysis with a React frontend viewer for interactive chess game analysis.
 
-## 🚀 **Status: FULLY OPERATIONAL**
+## 🎯 Project Overview
 
-✅ **All tests passing (33/33)**  
-✅ **Stockfish integration working**  
-✅ **CLI interface functional**  
-✅ **FastAPI endpoints ready**  
-✅ **Real game analysis successful**  
-✅ **Repository optimized (100% Python)**  
-✅ **Clean structure with minimal dependencies**  
-✅ **Engine stability and error handling improved**
+This project consists of two main components:
 
-## 🔧 **Recent Engine Fixes**
+1. **Python Backend**: Advanced chess analysis using Stockfish engine with move classification and accuracy scoring
+2. **React Frontend**: Interactive chess board viewer with move navigation and analysis display
 
-The Stockfish engine integration has been significantly improved with:
+## 🚀 Features
 
-- **Automatic Engine Recovery**: Engine automatically resets if it becomes unresponsive
-- **Board State Validation**: Prevents analysis of invalid board positions
-- **Retry Logic**: Automatic retry with engine reset on analysis failures
-- **Timeout Management**: Configurable analysis timeouts to prevent hanging
-- **Fallback Evaluations**: Material-based evaluation when engine analysis fails
-- **Robust Error Handling**: Graceful degradation instead of crashes
-- **Connection Health Checks**: Regular engine responsiveness testing
+### Python Backend Analysis
+- **Stockfish Integration**: Deep analysis using Stockfish chess engine
+- **Move Classification**: Labels moves as Brilliant, Great, Best, Excellent, Good, Inaccuracy, Mistake, or Blunder
+- **Accuracy Calculation**: Weighted accuracy scoring similar to Chess.com
+- **PGN Support**: Analyze games from PGN format
+- **JSON Output**: Structured analysis data for frontend consumption
 
-These improvements ensure the analyzer runs reliably even with complex positions or engine issues.
+### React Frontend Viewer
+- **Interactive Chess Board**: Visual representation of game positions
+- **Move Navigation**: Previous, Next, Start, End controls
+- **Auto-play**: Automatic move progression at 1 move per second
+- **Analysis Panel**: Real-time display of move quality, CP loss, and best moves
+- **Move History**: Clickable move list with current position highlighting
+- **Responsive Design**: Modern UI built with Tailwind CSS
 
-## Features
-
-- **Move Assessment**: Labels moves as Top (≤20 cp), Excellent (≤50 cp), Good (≤120 cp), Mistake (≤300 cp), Blunder (>300 cp)
-- **Brilliant Move Detection**: Identifies brilliant moves based on sacrifice, only-move, and surprise heuristics
-- **Multi-depth Analysis**: Performs both shallow (depth=10) and deep (depth=20) analysis
-- **MultiPV Support**: Analyzes top 3+ candidate moves
-- **PGN Annotation**: Adds comments and NAGs to PGN files
-- **CLI Interface**: Command-line tool for analysis
-- **FastAPI Endpoint**: REST API for programmatic access
-
-## 🛠️ Installation
+## 🛠️ Installation & Setup
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.8+
+- Node.js 16+ (for React development)
 - Stockfish chess engine
 
-### 1. Download Stockfish
-Download Stockfish from [stockfishchess.org](https://stockfishchess.org/download/) and place the executable in your project directory.
-
-**Note**: This repository includes a pre-compiled Stockfish executable for Windows (x86-64) in the `stockfish/` directory. For other platforms, download the appropriate version from the official website.
-
-### 2. Install Dependencies
+### Backend Setup
 ```bash
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Download Stockfish
+# Visit: https://stockfishchess.org/download/
+# Place stockfish executable in stockfish/ directory
 ```
 
-### 3. Verify Installation
+### Frontend Setup
 ```bash
-python run_tests.py
+# Install Node.js dependencies (optional - CDN version works)
+npm install
+
+# Or use the CDN version (already configured in index.html)
+# No build step required - runs directly in browser
 ```
 
-## Usage
+## 📖 Usage
 
-### CLI Usage
-
+### Running Chess Analysis
 ```bash
-python scripts/analyze.py --pgn input.pgn --engine /path/to/stockfish --output analyzed.pgn
+# Analyze a PGN file
+python scripts/analyze.py analyze -p examples/sample_game.pgn -e stockfish/stockfish-windows-x86-64-avx2.exe -j sample_analysis.json
+
+# View help
+python scripts/analyze.py --help
 ```
 
-Options:
-- `--pgn`: Input PGN file path
-- `--engine`: Path to Stockfish executable
-- `--output`: Output PGN file path
-- `--shallow-depth`: Shallow analysis depth (default: 10)
-- `--deep-depth`: Deep analysis depth (default: 20)
-- `--multipv`: Number of top moves to analyze (default: 3)
-
-### API Usage
-
-Start the server:
+### Running the React Viewer
 ```bash
-uvicorn chess_analyzer.api:app --reload
+# Start the local server
+python serve.py
+
+# Open browser to: http://localhost:8000
 ```
 
-Analyze a game:
-```bash
-curl -X POST "http://localhost:8000/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{"pgn": "1. e4 e5 2. Nf3 Nc6...", "engine_path": "/path/to/stockfish"}'
+## 🎮 React Component: ChessBoardViewer
+
+The main React component that provides an interactive chess analysis interface.
+
+### Props
+- `pgn`: PGN string of the chess game
+- `moves`: Array of move objects (alternative to PGN)
+- `analysis`: Array of analysis data for each move
+- `className`: Additional CSS classes
+
+### Features
+- **Chess Board Display**: Visual board representation
+- **Move Controls**: Navigation buttons for game progression
+- **Analysis Display**: Real-time move quality and statistics
+- **Move History**: Interactive move list with click navigation
+- **Auto-play**: Automatic move progression
+- **Board Flipping**: Switch between white/black perspective
+
+### Example Usage
+```jsx
+<ChessBoardViewer
+  pgn={gamePgn}
+  analysis={moveAnalysis}
+  className="w-full"
+/>
 ```
 
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
 chess-analyzer/
-├── chess_analyzer/          # Core Python package
-│   ├── __init__.py          # Package initialization
-│   ├── engine.py            # Stockfish wrapper
-│   ├── evaluator.py         # Move assessment logic
-│   ├── annotator.py         # PGN annotation
-│   ├── models.py            # Data structures
-│   └── api.py               # FastAPI endpoints
-├── scripts/                 # Command-line tools
-│   └── analyze.py           # CLI entry point
-├── tests/                   # Comprehensive test suite
-├── examples/                # Sample games and usage examples
-├── stockfish/               # Stockfish engine (executable only)
-│   └── stockfish-windows-x86-64-avx2.exe  # Pre-compiled for Windows
-├── requirements.txt         # Python dependencies
-├── README.md               # This documentation
-└── QUICKSTART.md           # Quick start guide
+├── scripts/
+│   ├── analyze.py          # Main analysis script
+│   └── chess_analyzer.py   # Core analysis logic
+├── examples/
+│   └── sample_game.pgn     # Sample chess game
+├── stockfish/              # Stockfish engine directory
+├── index.html              # Main React application
+├── serve.py                # Local development server
+├── sample_analysis.json    # Analysis output
+├── requirements.txt        # Python dependencies
+├── package.json            # Node.js dependencies
+└── README.md              # This file
 ```
 
-**Note**: The repository includes a pre-compiled Stockfish executable for Windows. For other platforms, download Stockfish from [stockfishchess.org](https://stockfishchess.org/download/).
+## 🔧 Technical Details
 
-## Move Assessment Logic
+### Backend Technologies
+- **Python**: Core analysis logic
+- **python-chess**: Chess game handling
+- **Stockfish**: Chess engine for analysis
+- **JSON**: Data output format
 
-### Centipawn Loss Thresholds
-- **Top**: ≤20 cp loss
-- **Excellent**: ≤50 cp loss
-- **Good**: ≤120 cp loss
-- **Mistake**: ≤300 cp loss
-- **Blunder**: >300 cp loss
+### Frontend Technologies
+- **React 18**: Modern React with hooks
+- **Tailwind CSS**: Utility-first CSS framework
+- **Babel**: In-browser JSX transformation
+- **CDN Libraries**: React, chess.js, chessboardjsx loaded via CDN
 
-### Brilliant Move Detection
-A move is marked as "Brilliant (!!)" if:
-1. Near-best (≤30 cp loss vs best OR equal to best)
-2. AND (sacrifice OR only-move OR surprise)
-3. AND eval before wasn't already winning (> +600 cp)
+### Data Flow
+1. Python backend analyzes PGN → generates JSON
+2. React frontend loads JSON → displays analysis
+3. User interacts with viewer → navigates through moves
+4. Real-time analysis display → shows move quality and details
 
-### Heuristics
-- **Only Move**: Only legal move that keeps eval above -200 cp
-- **Sacrifice**: Material drop ≥300 (pawn units) but eval doesn't collapse
-- **Surprise**: Not in shallow top-N but best at deep analysis
+## 🎨 UI Components
 
-## Output
+### Game Summary Dashboard
+- Overall game quality and accuracy
+- Player statistics comparison
+- Move count and winner information
 
-### Annotated PGN
-- Comments: `!! Brilliant`, `[Only move]`, `Δcp=+50`
-- NAGs: Standard chess annotation symbols
+### Chess Board Viewer
+- Interactive chess board (placeholder)
+- Navigation controls
+- Move counter and notation
 
-### JSON Summary
-```json
-{
-  "move": "e4",
-  "label": "Top",
-  "brilliant": true,
-  "cp_gain": 30,
-  "loss_vs_best": 0,
-  "best_move": "e4"
-}
-```
+### Analysis Panel
+- Current move information
+- Quality classification
+- CP loss and best move data
+- Special move indicators (Sacrifice, Only Move, etc.)
 
-## Development
+## 🚀 Development
 
-### Running Tests
+### Local Development
 ```bash
-python -m pytest tests/
+# Start Python server
+python serve.py
+
+# Access at http://localhost:8000
+# No build step required - edit index.html directly
 ```
 
-### Code Style
-The project follows PEP 8 guidelines and uses type hints throughout.
+### Adding Features
+- **New Analysis Metrics**: Modify `scripts/chess_analyzer.py`
+- **UI Enhancements**: Edit React components in `index.html`
+- **Styling Changes**: Update Tailwind classes
 
-## License
+## 📊 Sample Output
 
-MIT License - see LICENSE file for details.
+The system generates comprehensive analysis including:
+- Move-by-move quality assessment
+- Centipawn loss calculations
+- Best move recommendations
+- Player accuracy percentages
+- Game quality classification
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
+4. Test thoroughly
 5. Submit a pull request
 
-## 🚨 Troubleshooting
+## 📄 License
 
-### Common Issues and Solutions
+MIT License - see LICENSE file for details
 
-#### Engine Connection Problems
-- **"Cannot connect to chess engine"**: Ensure Stockfish executable path is correct and file has execute permissions
-- **"Engine not responsive"**: The analyzer will automatically reset the engine connection
-- **"Analysis timeout"**: Increase timeout with `engine.set_timeout(60.0)` or reduce analysis depth
+## 🙏 Acknowledgments
 
-#### Analysis Errors
-- **"Invalid board state"**: The analyzer will skip invalid positions and continue
-- **"Move not legal"**: Board state validation prevents this error
-- **"Engine analysis failed"**: Automatic retry with engine reset will resolve most issues
+- Stockfish chess engine team
+- python-chess library contributors
+- React and Tailwind CSS communities
 
-#### Performance Issues
-- **Slow analysis**: Reduce `--shallow-depth` and `--deep-depth` parameters
-- **Memory issues**: Reduce `--multipv` parameter (default: 3)
-- **Hanging analysis**: Set shorter timeouts with `--time-limit` parameter
+---
 
-### Testing Engine Fixes
-
-Run the engine test script to verify your setup:
-```bash
-python test_engine_fixes.py
-```
-
-This will test:
-- Basic engine connectivity
-- Position analysis
-- Error handling
-- Timeout management
-- Board state validation
-
-## Future Features
-
-- Web dashboard (React + FastAPI backend)
-- Batch analysis of thousands of Lichess PGNs
-- Export statistics (brilliant moves per player)
-- ML model training on Stockfish-labeled data
+**Note**: This project combines the power of Python chess analysis with modern React web technologies to create an interactive chess analysis experience.

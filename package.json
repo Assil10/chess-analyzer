@@ -1,0 +1,30 @@
+{
+  "name": "chess-board-viewer",
+  "version": "1.0.0",
+  "description": "React component for viewing chess games with analysis",
+  "main": "ChessBoardViewer.jsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "chess.js": "^1.0.0-beta.6",
+    "chessboardjsx": "^2.4.6"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "keywords": [
+    "chess",
+    "react",
+    "component",
+    "pgn",
+    "analysis",
+    "chessboard"
+  ],
+  "author": "",
+  "license": "MIT"
+}
