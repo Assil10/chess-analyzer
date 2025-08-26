@@ -1,4 +1,4 @@
-# Chess Analysis AI (Top & Brilliant Move Detector).
+# Chess Analysis AI (Top & Brilliant Move Detector)
 
 A comprehensive chess analysis system that combines Python backend analysis with a React frontend viewer for interactive chess game analysis.
 
